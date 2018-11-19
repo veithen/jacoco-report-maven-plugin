@@ -21,8 +21,16 @@ package com.github.veithen.maven.jacoco;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonValue;
+import javax.json.JsonWriter;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -32,9 +40,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
+import org.jacoco.core.analysis.ICounter;
+import org.jacoco.core.analysis.IPackageCoverage;
+import org.jacoco.core.analysis.ISourceFileCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
-import org.jacoco.report.IReportVisitor;
-import org.jacoco.report.csv.CSVFormatter;
 
 import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
@@ -59,6 +68,29 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
     }
 
+    private File findRootDir() throws MojoExecutionException {
+        File rootDir = project.getBasedir();
+        while (!new File(rootDir, ".git").exists()) {
+            rootDir = rootDir.getParentFile();
+            if (rootDir == null) {
+                throw new MojoExecutionException("Root directory not found; are we running from a Git clone?");
+            }
+        }
+        return rootDir;
+    }
+
+    private static String makeRelative(File file, File rootDir) {
+        Deque<String> components = new LinkedList<>();
+        while (!file.equals(rootDir)) {
+            components.addFirst(file.getName());
+            file = file.getParentFile();
+            if (file == null) {
+                throw new IllegalArgumentException(String.format("%s is not a descendant of %s", file, rootDir));
+            }
+        }
+        return String.join("/", components);
+    }
+
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         ExecFileLoader loader = new ExecFileLoader();
@@ -78,16 +110,47 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 throw new MojoExecutionException(String.format("Failed to analyze %s: %s", coverageData.getClasses(), ex.getMessage()), ex);
             }
         }
+        File rootDir = findRootDir();
+        List<String> sourceDirs = results.stream()
+                .map(CoverageData::getSources)
+                .flatMap(List::stream)
+                .map(file -> makeRelative(file, rootDir))
+                .collect(Collectors.toList());
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
-        try {
-            IReportVisitor visitor = new CSVFormatter().createVisitor(System.out);
-            visitor.visitInfo(
-                    loader.getSessionInfoStore().getInfos(),
-                    loader.getExecutionDataStore().getContents());
-            visitor.visitBundle(bundle, null /* TODO */);
-            visitor.visitEnd();
-        } catch (IOException ex) {
-            throw new MojoExecutionException(String.format("Failed to generate coverage report: %s", ex.getMessage()), ex);
+        JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
+        for (IPackageCoverage packageCoverage : bundle.getPackages()) {
+            for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
+                String pathRelativeToSourceRoot = sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName();
+                Optional<String> pathRelativeToRootDir = sourceDirs.stream()
+                        .map(dir -> dir + "/" + pathRelativeToSourceRoot)
+                        .filter(path -> new File(rootDir, path).exists())
+                        .findFirst();
+                if (!pathRelativeToRootDir.isPresent()) {
+                    break;
+                }
+                JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
+                for (int i=0; i<sourceFileCoverage.getFirstLine(); i++) {
+                    coverageBuilder.add(JsonValue.NULL);
+                }
+                for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
+                    switch (sourceFileCoverage.getLine(i).getStatus()) {
+                        case ICounter.EMPTY:
+                            coverageBuilder.add(JsonValue.NULL);
+                            break;
+                        case ICounter.NOT_COVERED:
+                            coverageBuilder.add(0);
+                            break;
+                        default:
+                            coverageBuilder.add(1);
+                    }
+                }
+                sourceFilesBuilder.add(Json.createObjectBuilder()
+                        .add("name", pathRelativeToRootDir.get())
+                        .add("coverage", coverageBuilder.build())
+                        .build());
+            }
         }
+        JsonWriter out = Json.createWriter(System.out);
+        out.write(sourceFilesBuilder.build());
     }
 }
