@@ -48,6 +48,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -160,6 +161,11 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
 
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
+        Log log = getLog();
+        if (results.isEmpty()) {
+            log.info("No coverage data collected; skipping execution.");
+            return;
+        }
         ExecFileLoader loader = new ExecFileLoader();
         for (CoverageData coverageData : results) {
             try {
