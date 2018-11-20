@@ -189,7 +189,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                     break;
                 }
                 JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
-                for (int i=0; i<sourceFileCoverage.getFirstLine(); i++) {
+                for (int i=1; i<sourceFileCoverage.getFirstLine(); i++) {
                     coverageBuilder.add(JsonValue.NULL);
                 }
                 for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
