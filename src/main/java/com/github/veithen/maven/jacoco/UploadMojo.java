@@ -19,6 +19,7 @@
  */
 package com.github.veithen.maven.jacoco;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,9 +33,19 @@ import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.JsonWriter;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -67,6 +78,12 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
 
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
+
+    @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", required=true, readonly=true)
+    private String jobId;
+
+    @Parameter(defaultValue="https://coveralls.io/api/v1/jobs", required=true)
+    private String apiEndpoint;
 
     public UploadMojo() {
         super(CoverageData.class);
@@ -194,7 +211,29 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                         .build());
             }
         }
-        JsonWriter out = Json.createWriter(System.out);
-        out.write(sourceFilesBuilder.build());
+        JsonObject jsonFile = Json.createObjectBuilder()
+                .add("service_name", "travis-ci")
+                .add("service_job_id", jobId)
+                .add("source_files", sourceFilesBuilder.build())
+                .build();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter out = Json.createWriter(baos);
+        out.write(jsonFile);
+        out.close();
+        HttpEntity entity = MultipartEntityBuilder.create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+                .addBinaryBody("json_file", baos.toByteArray(), ContentType.create("application/json", "utf-8"), "coverage.json")
+                .build();
+        HttpPost post = new HttpPost(apiEndpoint);
+        post.setEntity(entity);
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpResponse response = httpClient.execute(post);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != HttpStatus.SC_OK) {
+                throw new MojoFailureException(String.format("Coveralls responded with status code %s", statusCode));
+            }
+        } catch (IOException ex) {
+            throw new MojoFailureException("Failed to send request to Coveralls", ex);
+        }
     }
 }
