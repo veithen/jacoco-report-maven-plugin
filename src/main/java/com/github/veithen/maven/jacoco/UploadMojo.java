@@ -20,7 +20,10 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -50,6 +53,18 @@ import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
 @Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
 public final class UploadMojo extends AggregatingMojo<CoverageData> {
+    private static final char[] HEX_CHARS;
+    
+    static {
+        HEX_CHARS = new char[16];
+        for (int i = 0; i < 10; i++) {
+            HEX_CHARS[i] = (char)('0' + i);
+        }
+        for (int i = 0; i < 6; i++) {
+            HEX_CHARS[10+i] = (char)('a' + i);
+        }
+    }
+
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
@@ -101,6 +116,31 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         return String.join("/", components);
     }
 
+    private static String digest(File file) throws MojoFailureException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new MojoFailureException("Failed to instantiate message digest", ex);
+        }
+        byte[] buffer = new byte[4096];
+        try (FileInputStream in = new FileInputStream(file)) {
+            int c;
+            while ((c = in.read(buffer)) != -1) {
+                digest.update(buffer, 0, c);
+            }
+        } catch (IOException ex) {
+            throw new MojoFailureException("Failed to compute checksum", ex);
+        }
+        byte[] digestData = digest.digest();
+        StringBuilder sb = new StringBuilder(digestData.length * 2);
+        for (byte b : digestData) {
+            sb.append(HEX_CHARS[(b >> 4) & 0xF]);
+            sb.append(HEX_CHARS[b & 0xF]);
+        }
+        return sb.toString();
+    }
+
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         ExecFileLoader loader = new ExecFileLoader();
@@ -149,6 +189,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 }
                 sourceFilesBuilder.add(Json.createObjectBuilder()
                         .add("name", makeRelative(sourceFile, rootDir))
+                        .add("source_digest", digest(sourceFile))
                         .add("coverage", coverageBuilder.build())
                         .build());
             }
