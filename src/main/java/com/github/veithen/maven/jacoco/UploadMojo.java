@@ -22,10 +22,10 @@ package com.github.veithen.maven.jacoco;
 import java.io.File;
 import java.io.IOException;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -37,6 +37,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.DirectoryScanner;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -59,10 +60,19 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Override
     protected CoverageData doExecute() throws MojoExecutionException, MojoFailureException {
         if (dataFile.exists()) {
-            return new CoverageData(
-                    dataFile,
-                    project.getArtifact().getFile(),
-                    project.getCompileSourceRoots().stream().map(File::new).collect(Collectors.toList()));
+            Map<String, File> sources = new HashMap<>();
+            for (String compileSourceRoot : project.getCompileSourceRoots()) {
+                File basedir = new File(compileSourceRoot);
+                if (basedir.exists()) {
+                    DirectoryScanner scanner = new DirectoryScanner();
+                    scanner.setBasedir(basedir);
+                    scanner.scan();
+                    for (String includedFile : scanner.getIncludedFiles()) {
+                        sources.put(includedFile, new File(basedir, includedFile));
+                    }
+                }
+            }
+            return new CoverageData(dataFile, project.getArtifact().getFile(), sources);
         } else {
             return null;
         }
@@ -111,21 +121,14 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
             }
         }
         File rootDir = findRootDir();
-        List<String> sourceDirs = results.stream()
-                .map(CoverageData::getSources)
-                .flatMap(List::stream)
-                .map(file -> makeRelative(file, rootDir))
-                .collect(Collectors.toList());
+        Map<String, File> sources = new HashMap<>();
+        results.stream().map(CoverageData::getSources).forEach(sources::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : bundle.getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
-                String pathRelativeToSourceRoot = sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName();
-                Optional<String> pathRelativeToRootDir = sourceDirs.stream()
-                        .map(dir -> dir + "/" + pathRelativeToSourceRoot)
-                        .filter(path -> new File(rootDir, path).exists())
-                        .findFirst();
-                if (!pathRelativeToRootDir.isPresent()) {
+                File sourceFile = sources.get(sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName());
+                if (sourceFile == null) {
                     break;
                 }
                 JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
@@ -145,7 +148,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                     }
                 }
                 sourceFilesBuilder.add(Json.createObjectBuilder()
-                        .add("name", pathRelativeToRootDir.get())
+                        .add("name", makeRelative(sourceFile, rootDir))
                         .add("coverage", coverageBuilder.build())
                         .build());
             }
