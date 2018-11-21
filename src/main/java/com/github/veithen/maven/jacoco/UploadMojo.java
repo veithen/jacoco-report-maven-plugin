@@ -92,20 +92,21 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
 
     @Override
     protected CoverageData doExecute() throws MojoExecutionException, MojoFailureException {
-        if (dataFile.exists()) {
-            Map<String, File> sources = new HashMap<>();
-            for (String compileSourceRoot : project.getCompileSourceRoots()) {
-                File basedir = new File(compileSourceRoot);
-                if (basedir.exists()) {
-                    DirectoryScanner scanner = new DirectoryScanner();
-                    scanner.setBasedir(basedir);
-                    scanner.scan();
-                    for (String includedFile : scanner.getIncludedFiles()) {
-                        sources.put(includedFile, new File(basedir, includedFile));
-                    }
+        boolean dataFileExists = dataFile.exists();
+        Map<String, File> sources = new HashMap<>();
+        for (String compileSourceRoot : project.getCompileSourceRoots()) {
+            File basedir = new File(compileSourceRoot);
+            if (basedir.exists()) {
+                DirectoryScanner scanner = new DirectoryScanner();
+                scanner.setBasedir(basedir);
+                scanner.scan();
+                for (String includedFile : scanner.getIncludedFiles()) {
+                    sources.put(includedFile, new File(basedir, includedFile));
                 }
             }
-            return new CoverageData(dataFile, project.getArtifact().getFile(), sources);
+        }
+        if (dataFileExists || !sources.isEmpty()) {
+            return new CoverageData(dataFileExists ? dataFile : null, project.getArtifact().getFile(), sources);
         } else {
             return null;
         }
@@ -168,10 +169,13 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
         ExecFileLoader loader = new ExecFileLoader();
         for (CoverageData coverageData : results) {
-            try {
-                loader.load(coverageData.getDataFile());
-            } catch (IOException ex) {
-                throw new MojoExecutionException(String.format("Failed to load exec file %s: %s", coverageData.getDataFile(), ex.getMessage()), ex);
+            File dataFile = coverageData.getDataFile();
+            if (dataFile != null) {
+                try {
+                    loader.load(dataFile);
+                } catch (IOException ex) {
+                    throw new MojoExecutionException(String.format("Failed to load exec file %s: %s", coverageData.getDataFile(), ex.getMessage()), ex);
+                }
             }
         }
         CoverageBuilder builder = new CoverageBuilder();
