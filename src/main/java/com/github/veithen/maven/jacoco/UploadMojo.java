@@ -86,6 +86,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="https://coveralls.io/api/v1/jobs", required=true)
     private String apiEndpoint;
 
+    @Parameter(defaultValue="true")
+    private boolean includeClasses;
+
     public UploadMojo() {
         super(CoverageData.class);
     }
@@ -94,19 +97,24 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     protected CoverageData doExecute() throws MojoExecutionException, MojoFailureException {
         boolean dataFileExists = dataFile.exists();
         Map<String, File> sources = new HashMap<>();
-        for (String compileSourceRoot : project.getCompileSourceRoots()) {
-            File basedir = new File(compileSourceRoot);
-            if (basedir.exists()) {
-                DirectoryScanner scanner = new DirectoryScanner();
-                scanner.setBasedir(basedir);
-                scanner.scan();
-                for (String includedFile : scanner.getIncludedFiles()) {
-                    sources.put(includedFile, new File(basedir, includedFile));
+        if (includeClasses) {
+            for (String compileSourceRoot : project.getCompileSourceRoots()) {
+                File basedir = new File(compileSourceRoot);
+                if (basedir.exists()) {
+                    DirectoryScanner scanner = new DirectoryScanner();
+                    scanner.setBasedir(basedir);
+                    scanner.scan();
+                    for (String includedFile : scanner.getIncludedFiles()) {
+                        sources.put(includedFile, new File(basedir, includedFile));
+                    }
                 }
             }
         }
         if (dataFileExists || !sources.isEmpty()) {
-            return new CoverageData(dataFileExists ? dataFile : null, project.getArtifact().getFile(), sources);
+            return new CoverageData(
+                    dataFileExists ? dataFile : null,
+                    includeClasses ? project.getArtifact().getFile() : null,
+                    sources);
         } else {
             return null;
         }
@@ -181,10 +189,13 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         CoverageBuilder builder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), builder);
         for (CoverageData coverageData : results) {
-            try {
-                analyzer.analyzeAll(coverageData.getClasses());
-            } catch (IOException ex) {
-                throw new MojoExecutionException(String.format("Failed to analyze %s: %s", coverageData.getClasses(), ex.getMessage()), ex);
+            File classes = coverageData.getClasses();
+            if (classes != null) {
+                try {
+                    analyzer.analyzeAll(classes);
+                } catch (IOException ex) {
+                    throw new MojoExecutionException(String.format("Failed to analyze %s: %s", coverageData.getClasses(), ex.getMessage()), ex);
+                }
             }
         }
         File rootDir = findRootDir();
