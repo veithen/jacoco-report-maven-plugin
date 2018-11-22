@@ -37,6 +37,7 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.JsonWriter;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -65,18 +66,6 @@ import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
 @Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
 public final class UploadMojo extends AggregatingMojo<CoverageData> {
-    private static final char[] HEX_CHARS;
-    
-    static {
-        HEX_CHARS = new char[16];
-        for (int i = 0; i < 10; i++) {
-            HEX_CHARS[i] = (char)('0' + i);
-        }
-        for (int i = 0; i < 6; i++) {
-            HEX_CHARS[10+i] = (char)('a' + i);
-        }
-    }
-
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
@@ -159,13 +148,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         } catch (IOException ex) {
             throw new MojoFailureException("Failed to compute checksum", ex);
         }
-        byte[] digestData = digest.digest();
-        StringBuilder sb = new StringBuilder(digestData.length * 2);
-        for (byte b : digestData) {
-            sb.append(HEX_CHARS[(b >> 4) & 0xF]);
-            sb.append(HEX_CHARS[b & 0xF]);
-        }
-        return sb.toString();
+        return Hex.encodeHexString(digest.digest(), true);
     }
 
     @Override
