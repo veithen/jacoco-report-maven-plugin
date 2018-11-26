@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -98,8 +100,8 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
         if (dataFileExists || !sources.isEmpty()) {
             return new CoverageData(
-                    dataFileExists ? dataFile : null,
-                    includeClasses ? project.getArtifact().getFile() : null,
+                    dataFileExists ? Optional.of(dataFile) : Optional.empty(),
+                    includeClasses ? Optional.of(project.getArtifact().getFile()) : Optional.empty(),
                     sources);
         } else {
             return null;
@@ -148,34 +150,34 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         return Hex.encodeHexString(digest.digest(), true);
     }
 
+    private static <T> Iterable<T> toIterable(Stream<T> stream) {
+        return stream::iterator;
+    }
+
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-        if (results.isEmpty()) {
+        if (results.stream().map(CoverageData::getDataFile).noneMatch(Optional::isPresent)) {
             log.info("No coverage data collected; skipping execution.");
             return;
         }
         ExecFileLoader loader = new ExecFileLoader();
-        for (CoverageData coverageData : results) {
-            File dataFile = coverageData.getDataFile();
-            if (dataFile != null) {
-                try {
-                    loader.load(dataFile);
-                } catch (IOException ex) {
-                    throw new MojoExecutionException(String.format("Failed to load exec file %s: %s", coverageData.getDataFile(), ex.getMessage()), ex);
-                }
+        // Java 9: use flatMap(Optional::stream) here
+        for (File dataFile : toIterable(results.stream().map(CoverageData::getDataFile).filter(Optional::isPresent).map(Optional::get))) {
+            try {
+                loader.load(dataFile);
+            } catch (IOException ex) {
+                throw new MojoExecutionException(String.format("Failed to load exec file %s: %s", dataFile, ex.getMessage()), ex);
             }
         }
         CoverageBuilder builder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), builder);
-        for (CoverageData coverageData : results) {
-            File classes = coverageData.getClasses();
-            if (classes != null) {
-                try {
-                    analyzer.analyzeAll(classes);
-                } catch (IOException ex) {
-                    throw new MojoExecutionException(String.format("Failed to analyze %s: %s", coverageData.getClasses(), ex.getMessage()), ex);
-                }
+        // Java 9: use flatMap(Optional::stream) here
+        for (File classes : toIterable(results.stream().map(CoverageData::getClasses).filter(Optional::isPresent).map(Optional::get))) {
+            try {
+                analyzer.analyzeAll(classes);
+            } catch (IOException ex) {
+                throw new MojoExecutionException(String.format("Failed to analyze %s: %s", classes, ex.getMessage()), ex);
             }
         }
         File rootDir = findRootDir();
