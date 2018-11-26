@@ -20,13 +20,8 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +32,6 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -120,37 +114,6 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         return rootDir;
     }
 
-    private static String makeRelative(File file, File rootDir) {
-        Deque<String> components = new LinkedList<>();
-        while (!file.equals(rootDir)) {
-            components.addFirst(file.getName());
-            file = file.getParentFile();
-            if (file == null) {
-                throw new IllegalArgumentException(String.format("%s is not a descendant of %s", file, rootDir));
-            }
-        }
-        return String.join("/", components);
-    }
-
-    private static String digest(File file) throws MojoFailureException {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException ex) {
-            throw new MojoFailureException("Failed to instantiate message digest", ex);
-        }
-        byte[] buffer = new byte[4096];
-        try (FileInputStream in = new FileInputStream(file)) {
-            int c;
-            while ((c = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, c);
-            }
-        } catch (IOException ex) {
-            throw new MojoFailureException("Failed to compute checksum", ex);
-        }
-        return Hex.encodeHexString(digest.digest(), true);
-    }
-
     private static <T> Iterable<T> toIterable(Stream<T> stream) {
         return stream::iterator;
     }
@@ -179,15 +142,15 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 throw new MojoExecutionException(String.format("Failed to analyze %s: %s", classes, ex.getMessage()), ex);
             }
         }
-        File rootDir = findRootDir();
-        Map<String, File> sources = new HashMap<>();
-        results.stream().map(CoverageData::getSources).forEach(sources::putAll);
+        Map<String, File> sourceFiles = new HashMap<>();
+        results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
+        Sources sources = new Sources(sourceFiles, findRootDir());
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : bundle.getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
-                File sourceFile = sources.get(sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName());
-                if (sourceFile == null) {
+                Source source = sources.lookup(sourceFileCoverage);
+                if (source == null) {
                     break;
                 }
                 JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
@@ -207,8 +170,8 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                     }
                 }
                 sourceFilesBuilder.add(Json.createObjectBuilder()
-                        .add("name", makeRelative(sourceFile, rootDir))
-                        .add("source_digest", digest(sourceFile))
+                        .add("name", source.getPathRelativeToRepositoryRoot())
+                        .add("source_digest", source.digest())
                         .add("coverage", coverageBuilder.build())
                         .build());
             }
