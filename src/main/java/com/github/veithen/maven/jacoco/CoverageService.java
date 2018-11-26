@@ -28,5 +28,6 @@ import org.jacoco.core.analysis.IBundleCoverage;
 
 interface CoverageService {
     String getName();
+    boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException;
     HttpResponse upload(String jobId, IBundleCoverage bundleCoverage, Sources sources, HttpClient httpClient) throws MojoFailureException, IOException;
 }

@@ -28,7 +28,9 @@ import javax.json.JsonValue;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -46,6 +48,12 @@ final class Coveralls implements CoverageService {
     @Override
     public String getName() {
         return "Coveralls";
+    }
+
+    @Override
+    public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
+        HttpGet request = new HttpGet(String.format("https://coveralls.io/github/%s.json", repoSlug));
+        return httpClient.execute(request).getStatusLine().getStatusCode() == HttpStatus.SC_OK;
     }
 
     @Override

@@ -51,6 +51,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
+    @Parameter(defaultValue="${env.TRAVIS_REPO_SLUG}", required=true, readonly=true)
+    private String repoSlug;
+
     @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", required=true, readonly=true)
     private String jobId;
 
@@ -134,6 +137,10 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         IBundleCoverage bundleCoverage = builder.getBundle("Coverage Report");
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             for (CoverageService service : coverageServices) {
+                if (!service.isConfigured(repoSlug, httpClient)) {
+                    log.info(String.format("Skipping upload to %s: not configured", service.getName()));
+                    continue;
+                }
                 try {
                     int statusCode = service.upload(jobId, bundleCoverage, sources, httpClient).getStatusLine().getStatusCode();
                     if (statusCode != HttpStatus.SC_OK) {
@@ -142,6 +149,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 } catch (IOException ex) {
                     throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
                 }
+                log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
             }
         } catch (IOException ex) {
             throw new MojoFailureException("Failed to close HTTP client", ex);
