@@ -22,26 +22,25 @@ package com.github.veithen.maven.jacoco;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Optional;
 
 class CoverageData implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final Optional<File> dataFile;
-    private final Optional<File> classes;
+    private final File dataFile;
+    private final File classes;
     private final Map<String, File> sources;
 
-    CoverageData(Optional<File> dataFile, Optional<File> classes, Map<String, File> sources) {
+    CoverageData(File dataFile, File classes, Map<String, File> sources) {
         this.dataFile = dataFile;
         this.classes = classes;
         this.sources = sources;
     }
 
-    Optional<File> getDataFile() {
+    File getDataFile() {
         return dataFile;
     }
 
-    Optional<File> getClasses() {
+    File getClasses() {
         return classes;
     }
 

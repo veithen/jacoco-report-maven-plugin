@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.json.Json;
@@ -100,8 +100,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
         if (dataFileExists || !sources.isEmpty()) {
             return new CoverageData(
-                    dataFileExists ? Optional.of(dataFile) : Optional.empty(),
-                    includeClasses ? Optional.of(project.getArtifact().getFile()) : Optional.empty(),
+                    // Can't use optional here because it's not serializable.
+                    dataFileExists ? dataFile : null,
+                    includeClasses ? project.getArtifact().getFile() : null,
                     sources);
         } else {
             return null;
@@ -157,13 +158,12 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-        if (results.stream().map(CoverageData::getDataFile).noneMatch(Optional::isPresent)) {
+        if (results.stream().map(CoverageData::getDataFile).noneMatch(Objects::isNull)) {
             log.info("No coverage data collected; skipping execution.");
             return;
         }
         ExecFileLoader loader = new ExecFileLoader();
-        // Java 9: use flatMap(Optional::stream) here
-        for (File dataFile : toIterable(results.stream().map(CoverageData::getDataFile).filter(Optional::isPresent).map(Optional::get))) {
+        for (File dataFile : toIterable(results.stream().map(CoverageData::getDataFile).filter(Objects::nonNull))) {
             try {
                 loader.load(dataFile);
             } catch (IOException ex) {
@@ -172,8 +172,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
         CoverageBuilder builder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), builder);
-        // Java 9: use flatMap(Optional::stream) here
-        for (File classes : toIterable(results.stream().map(CoverageData::getClasses).filter(Optional::isPresent).map(Optional::get))) {
+        for (File classes : toIterable(results.stream().map(CoverageData::getClasses).filter(Objects::nonNull))) {
             try {
                 analyzer.analyzeAll(classes);
             } catch (IOException ex) {
