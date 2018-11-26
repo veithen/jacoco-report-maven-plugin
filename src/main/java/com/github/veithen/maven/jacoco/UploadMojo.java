@@ -19,7 +19,6 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,14 +34,12 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import javax.json.JsonWriter;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -220,13 +217,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 .add("service_job_id", jobId)
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        JsonWriter out = Json.createWriter(baos);
-        out.write(jsonFile);
-        out.close();
         HttpEntity entity = MultipartEntityBuilder.create()
                 .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-                .addBinaryBody("json_file", baos.toByteArray(), ContentType.create("application/json", "utf-8"), "coverage.json")
+                .addPart("json_file", new JsonContentBody(jsonFile, "coverage.json"))
                 .build();
         HttpPost post = new HttpPost(apiEndpoint);
         post.setEntity(entity);
