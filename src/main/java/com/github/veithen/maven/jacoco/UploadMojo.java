@@ -27,17 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -50,23 +40,19 @@ import org.codehaus.plexus.util.DirectoryScanner;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
-import org.jacoco.core.analysis.ICounter;
-import org.jacoco.core.analysis.IPackageCoverage;
-import org.jacoco.core.analysis.ISourceFileCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
 
 import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
 @Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
 public final class UploadMojo extends AggregatingMojo<CoverageData> {
+    private static final CoverageService[] coverageServices = { Coveralls.INSTANCE };
+
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
     @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", required=true, readonly=true)
     private String jobId;
-
-    @Parameter(defaultValue="https://coveralls.io/api/v1/jobs", required=true)
-    private String apiEndpoint;
 
     @Parameter(defaultValue="true")
     private boolean includeClasses;
@@ -145,56 +131,20 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         Sources sources = new Sources(sourceFiles, findRootDir());
-        IBundleCoverage bundle = builder.getBundle("Coverage Report");
-        JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
-        for (IPackageCoverage packageCoverage : bundle.getPackages()) {
-            for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
-                Source source = sources.lookup(sourceFileCoverage);
-                if (source == null) {
-                    break;
-                }
-                JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
-                for (int i=1; i<sourceFileCoverage.getFirstLine(); i++) {
-                    coverageBuilder.add(JsonValue.NULL);
-                }
-                for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
-                    switch (sourceFileCoverage.getLine(i).getStatus()) {
-                        case ICounter.EMPTY:
-                            coverageBuilder.add(JsonValue.NULL);
-                            break;
-                        case ICounter.NOT_COVERED:
-                            coverageBuilder.add(0);
-                            break;
-                        default:
-                            coverageBuilder.add(1);
-                    }
-                }
-                sourceFilesBuilder.add(Json.createObjectBuilder()
-                        .add("name", source.getPathRelativeToRepositoryRoot())
-                        .add("source_digest", source.digest())
-                        .add("coverage", coverageBuilder.build())
-                        .build());
-            }
-        }
-        JsonObject jsonFile = Json.createObjectBuilder()
-                .add("service_name", "travis-ci")
-                .add("service_job_id", jobId)
-                .add("source_files", sourceFilesBuilder.build())
-                .build();
-        HttpEntity entity = MultipartEntityBuilder.create()
-                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-                .addPart("json_file", new JsonContentBody(jsonFile, "coverage.json"))
-                .build();
-        HttpPost post = new HttpPost(apiEndpoint);
-        post.setEntity(entity);
+        IBundleCoverage bundleCoverage = builder.getBundle("Coverage Report");
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpResponse response = httpClient.execute(post);
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode != HttpStatus.SC_OK) {
-                throw new MojoFailureException(String.format("Coveralls responded with status code %s", statusCode));
+            for (CoverageService service : coverageServices) {
+                try {
+                    int statusCode = service.upload(jobId, bundleCoverage, sources, httpClient).getStatusLine().getStatusCode();
+                    if (statusCode != HttpStatus.SC_OK) {
+                        throw new MojoFailureException(String.format("%s responded with status code %s", service.getName(), statusCode));
+                    }
+                } catch (IOException ex) {
+                    throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
+                }
             }
         } catch (IOException ex) {
-            throw new MojoFailureException("Failed to send request to Coveralls", ex);
+            throw new MojoFailureException("Failed to close HTTP client", ex);
         }
     }
 }
