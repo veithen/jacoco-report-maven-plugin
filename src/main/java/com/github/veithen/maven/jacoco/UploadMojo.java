@@ -107,7 +107,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-        if (results.stream().map(CoverageData::getDataFile).noneMatch(Objects::isNull)) {
+        if (results.stream().map(CoverageData::getDataFile).allMatch(Objects::isNull)) {
             log.info("No coverage data collected; skipping execution.");
             return;
         }
