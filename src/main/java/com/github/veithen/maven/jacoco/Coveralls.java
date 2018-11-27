@@ -40,9 +40,11 @@ import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Coveralls implements CoverageService {
-    static final Coveralls INSTANCE = new Coveralls();
+    private final String apiEndpoint;
 
-    private Coveralls() {}
+    Coveralls(String apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
+    }
 
     @Override
     public String getName() {
@@ -51,7 +53,7 @@ final class Coveralls implements CoverageService {
 
     @Override
     public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
-        HttpGet request = new HttpGet(String.format("https://coveralls.io/github/%s.json", repoSlug));
+        HttpGet request = new HttpGet(String.format("%s/github/%s.json", apiEndpoint, repoSlug));
         return httpClient.execute(request).getStatusLine().getStatusCode() == HttpStatus.SC_OK;
     }
 
@@ -96,7 +98,7 @@ final class Coveralls implements CoverageService {
                 .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
                 .addPart("json_file", new JsonContentBody(jsonFile, "coverage.json"))
                 .build();
-        HttpPost post = new HttpPost("https://coveralls.io/api/v1/jobs");
+        HttpPost post = new HttpPost(String.format("%s/api/v1/jobs", apiEndpoint));
         post.setEntity(entity);
         return httpClient.execute(post);
     }

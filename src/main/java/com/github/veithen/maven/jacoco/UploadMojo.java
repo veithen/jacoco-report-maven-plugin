@@ -46,8 +46,6 @@ import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
 @Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
 public final class UploadMojo extends AggregatingMojo<CoverageData> {
-    private static final CoverageService[] coverageServices = { Coveralls.INSTANCE, Codecov.INSTANCE };
-
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
@@ -59,6 +57,12 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
 
     @Parameter(defaultValue="true")
     private boolean includeClasses;
+
+    @Parameter(defaultValue="https://coveralls.io", required=true)
+    private String coverallsApiEndpoint;
+
+    @Parameter(defaultValue="https://codecov.io", required=true)
+    private String codecovApiEndpoint;
 
     public UploadMojo() {
         super(CoverageData.class);
@@ -134,6 +138,10 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
+        CoverageService[] coverageServices = {
+                new Coveralls(coverallsApiEndpoint),
+                new Codecov(codecovApiEndpoint),
+        };
         Context context = new Context(loader, bundle, sourceFiles, findRootDir());
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             for (CoverageService service : coverageServices) {

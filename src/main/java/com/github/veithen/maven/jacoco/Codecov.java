@@ -31,9 +31,11 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.jacoco.report.xml.XMLFormatter;
 
 final class Codecov implements CoverageService {
-    static final Codecov INSTANCE = new Codecov();
+    private final String apiEndpoint;
 
-    private Codecov() {}
+    Codecov(String apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
+    }
 
     @Override
     public String getName() {
@@ -42,13 +44,13 @@ final class Codecov implements CoverageService {
 
     @Override
     public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
-        HttpGet request = new HttpGet(String.format("https://codecov.io/api/gh/%s", repoSlug));
+        HttpGet request = new HttpGet(String.format("%s/api/gh/%s", apiEndpoint, repoSlug));
         return httpClient.execute(request).getStatusLine().getStatusCode() == HttpStatus.SC_OK;
     }
 
     @Override
     public HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException {
-        HttpPost post = new HttpPost(String.format("https://codecov.io/upload/v2?service=travis&job=%s", jobId));
+        HttpPost post = new HttpPost(String.format("%s/upload/v2?service=travis&job=%s", apiEndpoint, jobId));
         post.setEntity(new StreamableHttpEntity("text/plain") {
             @Override
             public void writeTo(OutputStream out) throws IOException {
