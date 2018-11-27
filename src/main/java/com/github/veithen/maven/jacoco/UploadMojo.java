@@ -46,7 +46,7 @@ import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
 @Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
 public final class UploadMojo extends AggregatingMojo<CoverageData> {
-    private static final CoverageService[] coverageServices = { Coveralls.INSTANCE };
+    private static final CoverageService[] coverageServices = { Coveralls.INSTANCE, Codecov.INSTANCE };
 
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
@@ -133,8 +133,8 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         }
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
-        Sources sources = new Sources(sourceFiles, findRootDir());
-        IBundleCoverage bundleCoverage = builder.getBundle("Coverage Report");
+        IBundleCoverage bundle = builder.getBundle("Coverage Report");
+        Context context = new Context(loader, bundle, sourceFiles, findRootDir());
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             for (CoverageService service : coverageServices) {
                 if (!service.isConfigured(repoSlug, httpClient)) {
@@ -142,7 +142,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                     continue;
                 }
                 try {
-                    int statusCode = service.upload(jobId, bundleCoverage, sources, httpClient).getStatusLine().getStatusCode();
+                    int statusCode = service.upload(jobId, context, httpClient).getStatusLine().getStatusCode();
                     if (statusCode != HttpStatus.SC_OK) {
                         throw new MojoFailureException(String.format("%s responded with status code %s", service.getName(), statusCode));
                     }

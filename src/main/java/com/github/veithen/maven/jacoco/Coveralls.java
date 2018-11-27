@@ -35,7 +35,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.maven.plugin.MojoFailureException;
-import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
@@ -57,11 +56,11 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public HttpResponse upload(String jobId, IBundleCoverage bundleCoverage, Sources sources, HttpClient httpClient) throws MojoFailureException, IOException {
+    public HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
-        for (IPackageCoverage packageCoverage : bundleCoverage.getPackages()) {
+        for (IPackageCoverage packageCoverage : context.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
-                Source source = sources.lookup(sourceFileCoverage);
+                Source source = context.lookupSource(sourceFileCoverage);
                 if (source == null) {
                     break;
                 }

@@ -24,10 +24,9 @@ import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.maven.plugin.MojoFailureException;
-import org.jacoco.core.analysis.IBundleCoverage;
 
 interface CoverageService {
     String getName();
     boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException;
-    HttpResponse upload(String jobId, IBundleCoverage bundleCoverage, Sources sources, HttpClient httpClient) throws MojoFailureException, IOException;
+    HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException;
 }

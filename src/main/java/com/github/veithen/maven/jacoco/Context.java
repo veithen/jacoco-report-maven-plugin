@@ -20,20 +20,40 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
+import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
+import org.jacoco.core.tools.ExecFileLoader;
+import org.jacoco.report.IReportVisitor;
 
-final class Sources {
+final class Context {
+    private final ExecFileLoader loader;
+    private final IBundleCoverage bundle;
     private final Map<String, File> sourceFiles;
     private final File rootDir;
 
-    public Sources(Map<String, File> sourceFiles, File rootDir) {
+    Context(ExecFileLoader loader, IBundleCoverage bundle, Map<String, File> sourceFiles, File rootDir) {
+        this.loader = loader;
+        this.bundle = bundle;
         this.sourceFiles = sourceFiles;
         this.rootDir = rootDir;
     }
 
-    Source lookup(ISourceFileCoverage sourceFileCoverage) {
+    IBundleCoverage getBundle() {
+        return bundle;
+    }
+
+    void visit(IReportVisitor visitor) throws IOException {
+        visitor.visitInfo(
+                loader.getSessionInfoStore().getInfos(),
+                loader.getExecutionDataStore().getContents());
+        visitor.visitBundle(bundle, null);
+        visitor.visitEnd();
+    }
+
+    Source lookupSource(ISourceFileCoverage sourceFileCoverage) {
         File sourceFile = sourceFiles.get(sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName());
         return sourceFile == null ? null : new Source(sourceFile, rootDir);
     }
