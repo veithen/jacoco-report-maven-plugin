@@ -22,20 +22,19 @@ package com.github.veithen.maven.jacoco;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.maven.plugin.MojoFailureException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.StreamingOutput;
+
 import org.jacoco.report.xml.XMLFormatter;
 
 final class Codecov implements CoverageService {
-    private final String apiEndpoint;
+    private final WebTarget target;
 
-    Codecov(String apiEndpoint) {
-        this.apiEndpoint = apiEndpoint;
+    Codecov(WebTarget target) {
+        this.target = target;
     }
 
     @Override
@@ -44,25 +43,27 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
-        HttpGet request = new HttpGet(String.format("%s/api/gh/%s", apiEndpoint, repoSlug));
-        HttpResponse response = httpClient.execute(request);
+    public boolean isConfigured(String repoSlug) {
         try {
-            return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-        } finally {
-            ((CloseableHttpResponse)response).close();
+            target.path(String.format("api/gh/%s", repoSlug)).request().get();
+            return true;
+        } catch (NotFoundException ex) {
+            return false;
         }
     }
 
     @Override
-    public HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException {
-        HttpPost post = new HttpPost(String.format("%s/upload/v2?service=travis&job=%s", apiEndpoint, jobId));
-        post.setEntity(new StreamableHttpEntity("text/plain") {
-            @Override
-            public void writeTo(OutputStream out) throws IOException {
-                context.visit(new XMLFormatter().createVisitor(out));
-            }
-        });
-        return httpClient.execute(post);
+    public void upload(String jobId, Context context) {
+        target.path("upload/v2")
+                .queryParam("service", "travis")
+                .queryParam("job", jobId)
+                .request()
+                .post(Entity.entity(
+                        new StreamingOutput() {
+                            @Override
+                            public void write(OutputStream out) throws IOException {
+                                context.visit(new XMLFormatter().createVisitor(out));
+                            }
+                        }, MediaType.TEXT_PLAIN));
     }
 }

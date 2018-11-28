@@ -27,11 +27,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -39,6 +38,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -140,31 +140,25 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
+        Client client = ClientBuilder.newBuilder()
+                .register(MultiPartFeature.class)
+                .build();
         CoverageService[] coverageServices = {
-                new Coveralls(coverallsApiEndpoint),
-                new Codecov(codecovApiEndpoint),
+                new Coveralls(client.target(coverallsApiEndpoint)),
+                new Codecov(client.target(codecovApiEndpoint)),
         };
         Context context = new Context(loader, bundle, sourceFiles, findRootDir());
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            for (CoverageService service : coverageServices) {
-                if (!service.isConfigured(repoSlug, httpClient)) {
+        for (CoverageService service : coverageServices) {
+            try {
+                if (!service.isConfigured(repoSlug)) {
                     log.info(String.format("Skipping upload to %s: not configured", service.getName()));
                     continue;
                 }
-                try {
-                    HttpResponse response = service.upload(jobId, context, httpClient);
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode != HttpStatus.SC_OK) {
-                        throw new MojoFailureException(String.format("%s responded with status code %s", service.getName(), statusCode));
-                    }
-                    ((CloseableHttpResponse)response).close();
-                } catch (IOException ex) {
-                    throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
-                }
-                log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
+                service.upload(jobId, context);
+            } catch (WebApplicationException ex) {
+                throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
             }
-        } catch (IOException ex) {
-            throw new MojoFailureException("Failed to close HTTP client", ex);
+            log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
         }
     }
 }

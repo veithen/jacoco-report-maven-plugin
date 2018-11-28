@@ -19,32 +19,26 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import java.io.IOException;
-
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.maven.plugin.MojoFailureException;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Coveralls implements CoverageService {
-    private final String apiEndpoint;
+    private final WebTarget target;
 
-    Coveralls(String apiEndpoint) {
-        this.apiEndpoint = apiEndpoint;
+    Coveralls(WebTarget target) {
+        this.target = target;
     }
 
     @Override
@@ -53,18 +47,17 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
-        HttpGet request = new HttpGet(String.format("%s/github/%s.json", apiEndpoint, repoSlug));
-        HttpResponse response = httpClient.execute(request);
+    public boolean isConfigured(String repoSlug) {
         try {
-            return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-        } finally {
-            ((CloseableHttpResponse)response).close();
+            target.path(String.format("github/%s.json", repoSlug)).request().get();
+            return true;
+        } catch (NotFoundException ex) {
+            return false;
         }
     }
 
     @Override
-    public HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException {
+    public void upload(String jobId, Context context) throws MojoFailureException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : context.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
@@ -100,12 +93,8 @@ final class Coveralls implements CoverageService {
                 .add("service_job_id", jobId)
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
-        HttpEntity entity = MultipartEntityBuilder.create()
-                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-                .addPart("json_file", new JsonContentBody(jsonFile, "coverage.json"))
-                .build();
-        HttpPost post = new HttpPost(String.format("%s/api/v1/jobs", apiEndpoint));
-        post.setEntity(entity);
-        return httpClient.execute(post);
+        FormDataMultiPart multipart = new FormDataMultiPart()
+                .field("json_file", jsonFile, MediaType.APPLICATION_JSON_TYPE);
+        target.path("api/v1/jobs").request().post(Entity.entity(multipart, multipart.getMediaType()));
     }
 }

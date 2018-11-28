@@ -19,14 +19,10 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import java.io.IOException;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.maven.plugin.MojoFailureException;
 
 interface CoverageService {
     String getName();
-    boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException;
-    HttpResponse upload(String jobId, Context context, HttpClient httpClient) throws MojoFailureException, IOException;
+    boolean isConfigured(String repoSlug);
+    void upload(String jobId, Context context) throws MojoFailureException;
 }
