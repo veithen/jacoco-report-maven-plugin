@@ -19,6 +19,10 @@
  */
 package com.github.veithen.maven.jacoco.coveralls;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -33,8 +37,19 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
-    public String post(@NotNull @FormDataParam("json_file") String jsonFile) {
-        System.out.println(jsonFile);
+    public String post(@NotNull @FormDataParam("json_file") JsonObject jsonFile) {
+        assertThat(jsonFile.getString("service_name", null)).isEqualTo("travis-ci");
+        assertThat(jsonFile.getString("service_job_id", null)).isEqualTo("123456");
+        JsonArray sourceFiles = jsonFile.getJsonArray("source_files");
+        assertThat(sourceFiles).hasSize(1);
+        JsonObject sourceFile = sourceFiles.getJsonObject(0);
+        assertThat(sourceFile.getString("name", null)).isEqualTo("target/its/test1/bundle/src/main/java/test/HelloService.java");
+        JsonArray coverage = sourceFile.getJsonArray("coverage");
+        int coveredLines = 0;
+        for (int i=0; i<coverage.size(); i++) {
+            coveredLines += coverage.getInt(i, 0);
+        }
+        assertThat(coveredLines).isEqualTo(2);
         return "OK";
     }
 }
