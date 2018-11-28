@@ -27,7 +27,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -150,10 +152,12 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                     continue;
                 }
                 try {
-                    int statusCode = service.upload(jobId, context, httpClient).getStatusLine().getStatusCode();
+                    HttpResponse response = service.upload(jobId, context, httpClient);
+                    int statusCode = response.getStatusLine().getStatusCode();
                     if (statusCode != HttpStatus.SC_OK) {
                         throw new MojoFailureException(String.format("%s responded with status code %s", service.getName(), statusCode));
                     }
+                    ((CloseableHttpResponse)response).close();
                 } catch (IOException ex) {
                     throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
                 }

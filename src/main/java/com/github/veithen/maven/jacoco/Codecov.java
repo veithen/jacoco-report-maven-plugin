@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.maven.plugin.MojoFailureException;
@@ -45,7 +46,12 @@ final class Codecov implements CoverageService {
     @Override
     public boolean isConfigured(String repoSlug, HttpClient httpClient) throws IOException {
         HttpGet request = new HttpGet(String.format("%s/api/gh/%s", apiEndpoint, repoSlug));
-        return httpClient.execute(request).getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+        HttpResponse response = httpClient.execute(request);
+        try {
+            return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+        } finally {
+            ((CloseableHttpResponse)response).close();
+        }
     }
 
     @Override
