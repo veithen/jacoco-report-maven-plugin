@@ -19,6 +19,7 @@
  */
 package com.github.veithen.maven.jacoco.coveralls;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -32,7 +33,7 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
-    public String post(@FormDataParam("json_file") String jsonFile) {
+    public String post(@NotNull @FormDataParam("json_file") String jsonFile) {
         System.out.println(jsonFile);
         return "OK";
     }
