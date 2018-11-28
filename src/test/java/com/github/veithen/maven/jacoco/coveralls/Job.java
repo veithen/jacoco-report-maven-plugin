@@ -21,6 +21,7 @@ package com.github.veithen.maven.jacoco.coveralls;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.validation.constraints.NotNull;
@@ -36,8 +37,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.TEXT_PLAIN)
-    public String post(@NotNull @FormDataParam("json_file") JsonObject jsonFile) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject post(@NotNull @FormDataParam("json_file") JsonObject jsonFile) {
         assertThat(jsonFile.getString("service_name", null)).isEqualTo("travis-ci");
         assertThat(jsonFile.getString("service_job_id", null)).isEqualTo("123456");
         JsonArray sourceFiles = jsonFile.getJsonArray("source_files");
@@ -50,6 +51,6 @@ public class Job {
             coveredLines += coverage.getInt(i, 0);
         }
         assertThat(coveredLines).isEqualTo(2);
-        return "OK";
+        return Json.createObjectBuilder().build();
     }
 }
