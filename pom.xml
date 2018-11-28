@@ -206,6 +206,10 @@
                             <goals>
                                 <goal>verify</goal>
                             </goals>
+                            <environmentVariables>
+                                <TRAVIS_JOB_ID>123456</TRAVIS_JOB_ID>
+                                <TRAVIS_REPO_SLUG>dummy/test</TRAVIS_REPO_SLUG>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>

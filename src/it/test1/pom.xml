@@ -56,8 +56,6 @@
                             <goal>upload</goal>
                         </goals>
                         <configuration>
-                            <jobId>123456</jobId>
-                            <repoSlug>dummy/test</repoSlug>
                             <coverallsApiEndpoint>http://localhost:@httpPort@/coveralls</coverallsApiEndpoint>
                             <codecovApiEndpoint>http://localhost:@httpPort@/codecov</codecovApiEndpoint>
                         </configuration>
