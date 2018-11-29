@@ -49,9 +49,9 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public boolean isConfigured(String repoSlug) {
+    public boolean isConfigured(TravisContext travisContext) {
         try {
-            target.path(String.format("github/%s.json", repoSlug)).request().get();
+            target.path(String.format("github/%s.json", travisContext.getRepoSlug())).request().get();
             return true;
         } catch (NotFoundException ex) {
             return false;
@@ -59,11 +59,11 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public void upload(String jobId, Context context) throws MojoFailureException {
+    public void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
-        for (IPackageCoverage packageCoverage : context.getBundle().getPackages()) {
+        for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
-                Source source = context.lookupSource(sourceFileCoverage);
+                Source source = coverageContext.lookupSource(sourceFileCoverage);
                 if (source == null) {
                     break;
                 }
@@ -92,7 +92,7 @@ final class Coveralls implements CoverageService {
         }
         JsonObject jsonFile = Json.createObjectBuilder()
                 .add("service_name", "travis-ci")
-                .add("service_job_id", jobId)
+                .add("service_job_id", travisContext.getJobId())
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
         FormDataMultiPart multipart = new FormDataMultiPart();

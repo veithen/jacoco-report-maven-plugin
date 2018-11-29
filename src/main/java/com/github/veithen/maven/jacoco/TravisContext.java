@@ -19,10 +19,26 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import org.apache.maven.plugin.MojoFailureException;
+final class TravisContext {
+    private final String repoSlug;
+    private final String jobId;
+    private final String commit;
 
-interface CoverageService {
-    String getName();
-    boolean isConfigured(TravisContext travisContext);
-    void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException;
+    TravisContext(String repoSlug, String jobId, String commit) {
+        this.repoSlug = repoSlug;
+        this.jobId = jobId;
+        this.commit = commit;
+    }
+
+    String getRepoSlug() {
+        return repoSlug;
+    }
+
+    String getJobId() {
+        return jobId;
+    }
+
+    String getCommit() {
+        return commit;
+    }
 }

@@ -59,6 +59,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", required=true, readonly=true)
     private String jobId;
 
+    @Parameter(defaultValue="${env.TRAVIS_COMMIT}", required=true, readonly=true)
+    private String commit;
+
     @Parameter(defaultValue="true")
     private boolean includeClasses;
 
@@ -165,14 +168,15 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 new Coveralls(client.target(coverallsApiEndpoint)),
                 new Codecov(client.target(codecovApiEndpoint)),
         };
-        Context context = new Context(loader, bundle, sourceFiles, findRootDir());
+        TravisContext travisContext = new TravisContext(repoSlug, jobId, commit);
+        CoverageContext coverageContext = new CoverageContext(loader, bundle, sourceFiles, findRootDir());
         for (CoverageService service : coverageServices) {
             try {
-                if (!service.isConfigured(repoSlug)) {
+                if (!service.isConfigured(travisContext)) {
                     log.info(String.format("Skipping upload to %s: not configured", service.getName()));
                     continue;
                 }
-                service.upload(jobId, context);
+                service.upload(travisContext, coverageContext);
             } catch (WebApplicationException ex) {
                 throw processException(service.getName(), ex);
             }

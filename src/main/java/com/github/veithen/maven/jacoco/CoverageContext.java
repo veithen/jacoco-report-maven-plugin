@@ -28,13 +28,13 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.IReportVisitor;
 
-final class Context {
+final class CoverageContext {
     private final ExecFileLoader loader;
     private final IBundleCoverage bundle;
     private final Map<String, File> sourceFiles;
     private final File rootDir;
 
-    Context(ExecFileLoader loader, IBundleCoverage bundle, Map<String, File> sourceFiles, File rootDir) {
+    CoverageContext(ExecFileLoader loader, IBundleCoverage bundle, Map<String, File> sourceFiles, File rootDir) {
         this.loader = loader;
         this.bundle = bundle;
         this.sourceFiles = sourceFiles;

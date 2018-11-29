@@ -43,9 +43,9 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public boolean isConfigured(String repoSlug) {
+    public boolean isConfigured(TravisContext travisContext) {
         try {
-            target.path(String.format("api/gh/%s", repoSlug)).request().get();
+            target.path(String.format("api/gh/%s", travisContext.getRepoSlug())).request().get();
             return true;
         } catch (NotFoundException ex) {
             return false;
@@ -53,16 +53,18 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public void upload(String jobId, Context context) {
+    public void upload(TravisContext travisContext, CoverageContext coverageContext) {
         System.out.println(target.path("upload/v2")
                 .queryParam("service", "travis")
-                .queryParam("job", jobId)
+                .queryParam("slug", travisContext.getRepoSlug())
+                .queryParam("job", travisContext.getJobId())
+                .queryParam("commit", travisContext.getCommit())
                 .request()
                 .post(Entity.entity(
                         new StreamingOutput() {
                             @Override
                             public void write(OutputStream out) throws IOException {
-                                context.visit(new XMLFormatter().createVisitor(out));
+                                coverageContext.visit(new XMLFormatter().createVisitor(out));
                             }
                         }, MediaType.TEXT_PLAIN), String.class));
     }
