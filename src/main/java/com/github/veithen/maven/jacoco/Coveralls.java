@@ -29,6 +29,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.maven.plugin.MojoFailureException;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IPackageCoverage;
@@ -93,8 +95,11 @@ final class Coveralls implements CoverageService {
                 .add("service_job_id", jobId)
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
-        FormDataMultiPart multipart = new FormDataMultiPart()
-                .field("json_file", jsonFile, MediaType.APPLICATION_JSON_TYPE);
+        FormDataMultiPart multipart = new FormDataMultiPart();
+        multipart.bodyPart(new FormDataBodyPart(
+                FormDataContentDisposition.name("json_file").fileName("coverage.json").build(),
+                jsonFile,
+                MediaType.APPLICATION_JSON_TYPE));
         System.out.println(target.path("api/v1/jobs").request().post(Entity.entity(multipart, multipart.getMediaType()), String.class));
     }
 }

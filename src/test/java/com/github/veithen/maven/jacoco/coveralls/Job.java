@@ -24,21 +24,27 @@ import static com.google.common.truth.Truth.assertThat;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 @Path("api/v1/jobs")
 public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonObject post(@NotNull @FormDataParam("json_file") JsonObject jsonFile) {
+    public JsonObject post(FormDataMultiPart multipart) {
+        FormDataBodyPart jsonFilePart = multipart.getField("json_file");
+        assertThat(jsonFilePart).isNotNull();
+        ContentDisposition contentDisposition = jsonFilePart.getContentDisposition();
+        assertThat(contentDisposition.getFileName()).isNotNull();
+        JsonObject jsonFile = jsonFilePart.getEntityAs(JsonObject.class);
         assertThat(jsonFile.getString("service_name", null)).isEqualTo("travis-ci");
         assertThat(jsonFile.getString("service_job_id", null)).isEqualTo("123456");
         JsonArray sourceFiles = jsonFile.getJsonArray("source_files");
