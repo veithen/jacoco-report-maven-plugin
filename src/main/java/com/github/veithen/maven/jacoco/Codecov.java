@@ -19,16 +19,18 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.StreamingOutput;
 
-import org.jacoco.report.xml.XMLFormatter;
+import org.jacoco.core.analysis.ICounter;
+import org.jacoco.core.analysis.ILine;
+import org.jacoco.core.analysis.IPackageCoverage;
+import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Codecov implements CoverageService {
     private final WebTarget target;
@@ -54,18 +56,42 @@ final class Codecov implements CoverageService {
 
     @Override
     public void upload(TravisContext travisContext, CoverageContext coverageContext) {
+        // Use JSON reporting because source file locations can't be properly resolved
+        // from a JaCoCo XML report.
+        JsonObjectBuilder sourceFilesBuilder = Json.createObjectBuilder();
+        for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
+            for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
+                Source source = coverageContext.lookupSource(sourceFileCoverage);
+                if (source == null) {
+                    break;
+                }
+                JsonObjectBuilder coverageBuilder = Json.createObjectBuilder();
+                for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
+                    ILine line = sourceFileCoverage.getLine(i);
+                    if (line.getStatus() == ICounter.EMPTY) {
+                        continue;
+                    }
+                    ICounter branchCounter = line.getBranchCounter();
+                    String value;
+                    if (branchCounter.getTotalCount() > 0) {
+                        value = String.format("%s/%s", branchCounter.getCoveredCount(), branchCounter.getTotalCount());
+                    } else if (line.getStatus() == ICounter.NOT_COVERED) {
+                        value = "0";
+                    } else {
+                        value = "1";
+                    }
+                    coverageBuilder.add(String.valueOf(i), value);
+                }
+                sourceFilesBuilder.add(source.getPathRelativeToRepositoryRoot(), coverageBuilder.build());
+            }
+        }
+        JsonObject report = Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
         System.out.println(target.path("upload/v2")
                 .queryParam("service", "travis")
                 .queryParam("slug", travisContext.getRepoSlug())
                 .queryParam("job", travisContext.getJobId())
                 .queryParam("commit", travisContext.getCommit())
                 .request()
-                .post(Entity.entity(
-                        new StreamingOutput() {
-                            @Override
-                            public void write(OutputStream out) throws IOException {
-                                coverageContext.visit(new XMLFormatter().createVisitor(out));
-                            }
-                        }, MediaType.TEXT_PLAIN), String.class));
+                .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class));
     }
 }
