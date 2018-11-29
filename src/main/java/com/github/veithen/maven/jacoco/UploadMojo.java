@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import javax.json.JsonObject;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -113,6 +115,22 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         return stream::iterator;
     }
 
+    static MojoFailureException processException(String serviceName, WebApplicationException exception) {
+        String message = null;
+        try {
+            JsonObject entity = exception.getResponse().readEntity(JsonObject.class);
+            if (entity.getBoolean("error", true)) {
+                message = entity.getString("message", null);
+            }
+        } catch (ProcessingException ex) {
+            // Ignore
+        }
+        if (message == null) {
+            message = exception.getMessage();
+        }
+        return new MojoFailureException(String.format("Failed to send request to %s: %s", serviceName, message), exception);
+    }
+
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
@@ -156,8 +174,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 }
                 service.upload(jobId, context);
             } catch (WebApplicationException ex) {
-                System.out.println(ex.getResponse().readEntity(String.class));
-                throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
+                throw processException(service.getName(), ex);
             }
             log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
         }
