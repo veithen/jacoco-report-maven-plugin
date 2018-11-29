@@ -156,6 +156,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 }
                 service.upload(jobId, context);
             } catch (WebApplicationException ex) {
+                System.out.println(ex.getResponse().readEntity(String.class));
                 throw new MojoFailureException(String.format("Failed to send request to %s", service.getName()), ex);
             }
             log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
