@@ -21,7 +21,6 @@ package com.github.veithen.maven.jacoco.coveralls;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
@@ -39,7 +38,7 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonObject post(FormDataMultiPart multipart) {
+    public String post(FormDataMultiPart multipart) {
         FormDataBodyPart jsonFilePart = multipart.getField("json_file");
         assertThat(jsonFilePart).isNotNull();
         ContentDisposition contentDisposition = jsonFilePart.getContentDisposition();
@@ -57,6 +56,6 @@ public class Job {
             coveredLines += coverage.getInt(i, 0);
         }
         assertThat(coveredLines).isEqualTo(2);
-        return Json.createObjectBuilder().build();
+        return "{\"message\":\"Job #44.1\",\"url\":\"https://coveralls.io/jobs/42722376\"}";
     }
 }
