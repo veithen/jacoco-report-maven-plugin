@@ -95,6 +95,6 @@ final class Coveralls implements CoverageService {
                 .build();
         FormDataMultiPart multipart = new FormDataMultiPart()
                 .field("json_file", jsonFile, MediaType.APPLICATION_JSON_TYPE);
-        target.path("api/v1/jobs").request().post(Entity.entity(multipart, multipart.getMediaType()));
+        System.out.println(target.path("api/v1/jobs").request().post(Entity.entity(multipart, multipart.getMediaType()), String.class));
     }
 }

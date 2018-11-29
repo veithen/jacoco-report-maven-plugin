@@ -54,7 +54,7 @@ final class Codecov implements CoverageService {
 
     @Override
     public void upload(String jobId, Context context) {
-        target.path("upload/v2")
+        System.out.println(target.path("upload/v2")
                 .queryParam("service", "travis")
                 .queryParam("job", jobId)
                 .request()
@@ -64,6 +64,6 @@ final class Codecov implements CoverageService {
                             public void write(OutputStream out) throws IOException {
                                 context.visit(new XMLFormatter().createVisitor(out));
                             }
-                        }, MediaType.TEXT_PLAIN));
+                        }, MediaType.TEXT_PLAIN), String.class));
     }
 }
