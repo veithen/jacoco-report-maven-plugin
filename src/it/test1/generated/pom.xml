@@ -26,6 +26,13 @@
         <version>1</version>
     </parent>
     <artifactId>generated</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>
