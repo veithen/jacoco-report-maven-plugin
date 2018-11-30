@@ -157,7 +157,8 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
         if (repoSlug == null || jobId == null || commit == null) {
-            log.info("Not running on Travis; skipping execution");
+            log.info("Not running on Travis; skipping execution.");
+            return;
         }
         TravisContext travisContext = new TravisContext(repoSlug, jobId, commit);
         if (results.stream().map(CoverageData::getDataFile).allMatch(Objects::isNull)) {
