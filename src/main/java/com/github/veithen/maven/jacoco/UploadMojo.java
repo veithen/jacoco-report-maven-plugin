@@ -95,10 +95,8 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
             for (String compileSourceRoot : project.getCompileSourceRoots()) {
                 File basedir = new File(compileSourceRoot);
                 if (isChild(buildDirectory, basedir)) {
-                    // Never include generated sources. Although in some cases this may be useful,
-                    // Coveralls and Codecov handle them differently: Coveralls doesn't appear to
-                    // include them in the overall coverage while Codecov does. Also, neither of
-                    // them will be able to display those files.
+                    // Never include generated sources. Neither Coveralls nor Codecov will be
+                    // able to display them.
                     continue;
                 }
                 if (basedir.exists()) {
