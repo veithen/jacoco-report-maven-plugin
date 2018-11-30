@@ -185,6 +185,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
         Client client = ClientBuilder.newBuilder()
                 .register(MultiPartFeature.class)
+                .register(UserAgentFeature.class)
                 .build();
         CoverageService[] coverageServices = {
                 new Coveralls(client.target(coverallsApiEndpoint)),

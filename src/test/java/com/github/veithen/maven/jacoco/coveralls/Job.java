@@ -24,9 +24,11 @@ import static com.google.common.truth.Truth.assertThat;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.ContentDisposition;
@@ -38,7 +40,8 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String post(FormDataMultiPart multipart) {
+    public String post(@HeaderParam(HttpHeaders.USER_AGENT) String userAgent, FormDataMultiPart multipart) {
+        assertThat(userAgent).startsWith("com.github.veithen.maven:jacoco-report-maven-plugin/");
         FormDataBodyPart jsonFilePart = multipart.getField("json_file");
         assertThat(jsonFilePart).isNotNull();
         ContentDisposition contentDisposition = jsonFilePart.getContentDisposition();
