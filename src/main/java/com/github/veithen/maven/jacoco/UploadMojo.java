@@ -53,13 +53,13 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
-    @Parameter(defaultValue="${env.TRAVIS_REPO_SLUG}", required=true, readonly=true)
+    @Parameter(defaultValue="${env.TRAVIS_REPO_SLUG}", readonly=true)
     private String repoSlug;
 
-    @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", required=true, readonly=true)
+    @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", readonly=true)
     private String jobId;
 
-    @Parameter(defaultValue="${env.TRAVIS_COMMIT}", required=true, readonly=true)
+    @Parameter(defaultValue="${env.TRAVIS_COMMIT}", readonly=true)
     private String commit;
 
     @Parameter(defaultValue="true")
@@ -156,6 +156,10 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
+        if (repoSlug == null || jobId == null || commit == null) {
+            log.info("Not running on Travis; skipping execution");
+        }
+        TravisContext travisContext = new TravisContext(repoSlug, jobId, commit);
         if (results.stream().map(CoverageData::getDataFile).allMatch(Objects::isNull)) {
             log.info("No coverage data collected; skipping execution.");
             return;
@@ -187,7 +191,6 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
                 new Coveralls(client.target(coverallsApiEndpoint)),
                 new Codecov(client.target(codecovApiEndpoint)),
         };
-        TravisContext travisContext = new TravisContext(repoSlug, jobId, commit);
         CoverageContext coverageContext = new CoverageContext(loader, bundle, sourceFiles, findRootDir());
         for (CoverageService service : coverageServices) {
             try {
