@@ -75,13 +75,32 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         super(CoverageData.class);
     }
 
+    private static boolean isChild(File parent, File child) {
+        File candidate = child;
+        while (candidate != null) {
+            if (candidate.equals(parent)) {
+                return true;
+            }
+            candidate = candidate.getParentFile();
+        }
+        return false;
+    }
+
     @Override
     protected CoverageData doExecute() throws MojoExecutionException, MojoFailureException {
         boolean dataFileExists = dataFile.exists();
         Map<String, File> sources = new HashMap<>();
         if (includeClasses) {
+            File buildDirectory = new File(project.getBuild().getDirectory());
             for (String compileSourceRoot : project.getCompileSourceRoots()) {
                 File basedir = new File(compileSourceRoot);
+                if (isChild(buildDirectory, basedir)) {
+                    // Never include generated sources. Although in some cases this may be useful,
+                    // Coveralls and Codecov handle them differently: Coveralls doesn't appear to
+                    // include them in the overall coverage while Codecov does. Also, neither of
+                    // them will be able to display those files.
+                    continue;
+                }
                 if (basedir.exists()) {
                     DirectoryScanner scanner = new DirectoryScanner();
                     scanner.setBasedir(basedir);
