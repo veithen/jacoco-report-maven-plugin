@@ -51,7 +51,10 @@ final class Coveralls implements CoverageService {
     @Override
     public boolean isConfigured(TravisContext travisContext) {
         try {
-            target.path(String.format("github/%s.json", travisContext.getRepoSlug())).request().get();
+            target.path(String.format("github/%s.json", travisContext.getRepoSlug()))
+                    .request()
+                    .accept(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonObject.class);
             return true;
         } catch (NotFoundException ex) {
             return false;

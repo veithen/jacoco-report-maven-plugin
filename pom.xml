@@ -217,6 +217,7 @@
                 <artifactId>maven-invoker-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>invoker-test1</id>
                         <goals>
                             <goal>run</goal>
                         </goals>
@@ -224,10 +225,28 @@
                             <goals>
                                 <goal>verify</goal>
                             </goals>
+                            <invokerTest>test1</invokerTest>
                             <environmentVariables>
                                 <TRAVIS_JOB_ID>123456</TRAVIS_JOB_ID>
                                 <TRAVIS_REPO_SLUG>dummy/test</TRAVIS_REPO_SLUG>
                                 <TRAVIS_COMMIT>4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33</TRAVIS_COMMIT>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>invoker-unconfigured</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <goals>
+                                <goal>verify</goal>
+                            </goals>
+                            <invokerTest>unconfigured</invokerTest>
+                            <environmentVariables>
+                                <TRAVIS_JOB_ID>654321</TRAVIS_JOB_ID>
+                                <TRAVIS_REPO_SLUG>dummy/foobar</TRAVIS_REPO_SLUG>
+                                <TRAVIS_COMMIT>c56d6502b9eb6dcde8aa334d4f3aba8752b5147f</TRAVIS_COMMIT>
                             </environmentVariables>
                         </configuration>
                     </execution>

@@ -47,7 +47,10 @@ final class Codecov implements CoverageService {
     @Override
     public boolean isConfigured(TravisContext travisContext) {
         try {
-            target.path(String.format("api/gh/%s", travisContext.getRepoSlug())).request().get();
+            target.path(String.format("api/gh/%s", travisContext.getRepoSlug()))
+                    .request()
+                    .accept(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonObject.class);
             return true;
         } catch (NotFoundException ex) {
             return false;

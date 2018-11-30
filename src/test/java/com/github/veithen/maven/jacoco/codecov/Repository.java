@@ -19,17 +19,26 @@
  */
 package com.github.veithen.maven.jacoco.codecov;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.github.veithen.maven.jacoco.TestHelper;
+
 @Path("api/gh/{user}/{repository}")
 public class Repository {
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String get(@PathParam("user") String user, @PathParam("repository") String repository) {
-        return "OK";
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonObject get(@PathParam("user") String user, @PathParam("repository") String repository) {
+        if (TestHelper.isConfigured(user, repository)) {
+            return Json.createObjectBuilder().build();
+        } else {
+            throw new NotFoundException();
+        }
     }
 }
