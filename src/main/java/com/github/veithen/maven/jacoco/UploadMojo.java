@@ -21,7 +21,9 @@ package com.github.veithen.maven.jacoco;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -154,13 +156,32 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Override
     protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-        if (repoSlug == null || jobId == null || commit == null) {
-            log.info("Not running on Travis; skipping execution.");
-            return;
-        }
-        TravisContext travisContext = new TravisContext(repoSlug, jobId, commit);
         if (results.stream().map(CoverageData::getDataFile).allMatch(Objects::isNull)) {
             log.info("No coverage data collected; skipping execution.");
+            return;
+        }
+        TravisContext travisContext;
+        if (repoSlug != null && jobId != null && commit != null) {
+            travisContext = new TravisContext(repoSlug, jobId, commit);
+        } else {
+            travisContext = null;
+        }
+        Client client = ClientBuilder.newBuilder()
+                .register(MultiPartFeature.class)
+                .register(UserAgentFeature.class)
+                .build();
+        List<CoverageService> coverageServices = new ArrayList<>();
+        coverageServices.add(new Coveralls(client.target(coverallsApiEndpoint)));
+        coverageServices.add(new Codecov(client.target(codecovApiEndpoint)));
+        for (Iterator<CoverageService> it = coverageServices.iterator(); it.hasNext(); ) {
+            CoverageService service = it.next();
+            if (!service.isEnabled(travisContext)) {
+                log.info(String.format("%s not configured/enabled", service.getName()));
+                it.remove();
+            }
+        }
+        if (coverageServices.isEmpty()) {
+            log.info("No usable coverage services found; skipping execution.");
             return;
         }
         ExecFileLoader loader = new ExecFileLoader();
@@ -183,21 +204,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
-        Client client = ClientBuilder.newBuilder()
-                .register(MultiPartFeature.class)
-                .register(UserAgentFeature.class)
-                .build();
-        CoverageService[] coverageServices = {
-                new Coveralls(client.target(coverallsApiEndpoint)),
-                new Codecov(client.target(codecovApiEndpoint)),
-        };
         CoverageContext coverageContext = new CoverageContext(loader, bundle, sourceFiles, findRootDir());
         for (CoverageService service : coverageServices) {
             try {
-                if (!service.isConfigured(travisContext)) {
-                    log.info(String.format("Skipping upload to %s: not configured", service.getName()));
-                    continue;
-                }
                 service.upload(travisContext, coverageContext);
             } catch (WebApplicationException ex) {
                 throw processException(service.getName(), ex);

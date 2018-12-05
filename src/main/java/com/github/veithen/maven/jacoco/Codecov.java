@@ -45,7 +45,10 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public boolean isConfigured(TravisContext travisContext) {
+    public boolean isEnabled(TravisContext travisContext) {
+        if (travisContext == null) {
+            return false;
+        }
         try {
             target.path(String.format("api/gh/%s", travisContext.getRepoSlug()))
                     .request()

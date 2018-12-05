@@ -23,6 +23,6 @@ import org.apache.maven.plugin.MojoFailureException;
 
 interface CoverageService {
     String getName();
-    boolean isConfigured(TravisContext travisContext);
+    boolean isEnabled(TravisContext travisContext);
     void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException;
 }
