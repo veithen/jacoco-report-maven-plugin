@@ -20,13 +20,16 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.IReportVisitor;
+import org.jacoco.report.InputStreamSourceFileLocator;
 
 final class CoverageContext {
     private final ExecFileLoader loader;
@@ -49,7 +52,14 @@ final class CoverageContext {
         visitor.visitInfo(
                 loader.getSessionInfoStore().getInfos(),
                 loader.getExecutionDataStore().getContents());
-        visitor.visitBundle(bundle, null);
+        // TODO: make encoding and tab with configurable
+        visitor.visitBundle(bundle, new InputStreamSourceFileLocator("utf-8", 4) {
+            @Override
+            protected InputStream getSourceStream(String path) throws IOException {
+                File file = sourceFiles.get(path);
+                return file == null ? null : new FileInputStream(file);
+            }
+        });
         visitor.visitEnd();
     }
 

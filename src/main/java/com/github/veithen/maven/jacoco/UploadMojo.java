@@ -73,6 +73,9 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="https://codecov.io", required=true)
     private String codecovApiEndpoint;
 
+    @Parameter(defaultValue="http://localhost:5001", required=true)
+    private String ipfsApiEndpoint;
+
     public UploadMojo() {
         super(CoverageData.class);
     }
@@ -173,6 +176,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
         List<CoverageService> coverageServices = new ArrayList<>();
         coverageServices.add(new Coveralls(client.target(coverallsApiEndpoint)));
         coverageServices.add(new Codecov(client.target(codecovApiEndpoint)));
+        coverageServices.add(new Ipfs(client.target(ipfsApiEndpoint)));
         for (Iterator<CoverageService> it = coverageServices.iterator(); it.hasNext(); ) {
             CoverageService service = it.next();
             if (!service.isEnabled(travisContext)) {
