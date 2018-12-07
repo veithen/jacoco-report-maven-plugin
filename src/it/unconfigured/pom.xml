@@ -61,6 +61,7 @@
                         <configuration>
                             <coverallsApiEndpoint>http://localhost:@httpPort@/coveralls</coverallsApiEndpoint>
                             <codecovApiEndpoint>http://localhost:@httpPort@/codecov</codecovApiEndpoint>
+                            <ipfsApiEndpoint>http://localhost:@httpPort@/ipfs</ipfsApiEndpoint>
                         </configuration>
                     </execution>
                 </executions>

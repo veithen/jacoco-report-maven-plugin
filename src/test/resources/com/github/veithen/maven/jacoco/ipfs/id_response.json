@@ -1,0 +1,13 @@
+{
+    "ID": "QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G",
+    "PublicKey": "CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCWwDIsNNLk+qza6KbVJDuCecPaw4Kmj+18MZtp2WoXC0GwoutTYgrLj/ChC5/Do1EqdSaLHI0yxVaRznuQS83KY+QPr8p+5j6r/stHrtT8WKWjJTR1EIm1DeAm/iwMGmPRxxXiXwkanqByGOxGmNh85zKOXe9AugAtvjDUVBVPejmnMkTYn9We7AdRW2ns9V9ChWG/8YoUBFyHkFBVtzTryIJDHhIFdToTNSSIb/ghML/D/WVVfA0WAvxNd3aYhmaaIB447PA79vZfaqjqz3bIs0vUy1hcU4joWFI1757qNbqZj+Dm6TmAZ9A+AXhjLkZNxAMCuOHswuuLTJbOksAtAgMBAAE=",
+    "Addresses": [
+        "/ip4/127.0.0.1/tcp/4001/ipfs/QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G",
+        "/ip4/10.132.0.6/tcp/4001/ipfs/QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G",
+        "/ip4/172.17.0.1/tcp/4001/ipfs/QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G",
+        "/ip6/::1/tcp/4001/ipfs/QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G",
+        "/ip4/35.195.157.189/tcp/4001/ipfs/QmWAJrm3X8jZjkKxVvowS6dbeFyYQwxGtjtSimWy8KTQ6G"
+    ],
+    "AgentVersion": "go-ipfs/0.4.18/6f19dd5",
+    "ProtocolVersion": "ipfs/0.1.0"
+}

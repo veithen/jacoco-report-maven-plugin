@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Locale;
 
+import javax.json.JsonObject;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -49,7 +50,7 @@ final class Ipfs implements CoverageService {
     @Override
     public boolean isEnabled(TravisContext travisContext) {
         try {
-            target.path("api/v0/id").request(MediaType.APPLICATION_JSON_TYPE).get();
+            target.path("api/v0/id").request(MediaType.APPLICATION_JSON_TYPE).get(JsonObject.class);
             return true;
         } catch (ProcessingException ex) {
             if (ex.getCause() instanceof ConnectException) {
