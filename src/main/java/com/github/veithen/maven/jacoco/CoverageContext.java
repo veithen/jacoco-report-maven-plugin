@@ -24,14 +24,20 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
+import org.jacoco.core.data.SessionInfo;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.IReportVisitor;
 import org.jacoco.report.InputStreamSourceFileLocator;
 
 final class CoverageContext {
+    private static final Pattern autoSessionIdPattern = Pattern.compile(".*-([0-9a-f]{1,8})");
+
     private final ExecFileLoader loader;
     private final IBundleCoverage bundle;
     private final Map<String, File> sourceFiles;
@@ -48,9 +54,21 @@ final class CoverageContext {
         return bundle;
     }
 
+    static SessionInfo anonymize(SessionInfo sessionInfo) {
+        Matcher matcher = autoSessionIdPattern.matcher(sessionInfo.getId());
+        if (matcher.matches()) {
+            return new SessionInfo(matcher.group(1), sessionInfo.getStartTimeStamp(),
+                    sessionInfo.getDumpTimeStamp());
+        } else {
+            return sessionInfo;
+        }
+    }
+
     void visit(IReportVisitor visitor) throws IOException {
         visitor.visitInfo(
-                loader.getSessionInfoStore().getInfos(),
+                loader.getSessionInfoStore().getInfos().stream()
+                        .map(CoverageContext::anonymize)
+                        .collect(Collectors.toList()),
                 loader.getExecutionDataStore().getContents());
         // TODO: make encoding and tab with configurable
         visitor.visitBundle(bundle, new InputStreamSourceFileLocator("utf-8", 4) {
