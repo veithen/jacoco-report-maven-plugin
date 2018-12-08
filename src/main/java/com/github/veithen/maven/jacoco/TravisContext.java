@@ -34,6 +34,14 @@ final class TravisContext {
         return repoSlug;
     }
 
+    String getUser() {
+        return repoSlug.split("/")[0];
+    }
+
+    String getRepository() {
+        return repoSlug.split("/")[1];
+    }
+
     String getJobId() {
         return jobId;
     }

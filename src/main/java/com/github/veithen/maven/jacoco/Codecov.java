@@ -50,7 +50,9 @@ final class Codecov implements CoverageService {
             return false;
         }
         try {
-            target.path(String.format("api/gh/%s", travisContext.getRepoSlug()))
+            target.path("api/gh/{user}/{repo}")
+                    .resolveTemplate("user", travisContext.getUser())
+                    .resolveTemplate("repo", travisContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonObject.class);
@@ -99,6 +101,11 @@ final class Codecov implements CoverageService {
                 .queryParam("commit", travisContext.getCommit())
                 .request()
                 .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class);
-        return target.path(String.format("gh/%s/tree/%s", travisContext.getRepoSlug(), travisContext.getCommit())).getUri().toString();
+        return target.path("gh/{user}/{repo}/tree/{commit}")
+                .resolveTemplate("user", travisContext.getUser())
+                .resolveTemplate("repo", travisContext.getRepository())
+                .resolveTemplate("commit", travisContext.getCommit())
+                .getUri()
+                .toString();
     }
 }

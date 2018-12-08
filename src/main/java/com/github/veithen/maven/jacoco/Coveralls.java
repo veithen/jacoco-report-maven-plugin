@@ -54,7 +54,9 @@ final class Coveralls implements CoverageService {
             return false;
         }
         try {
-            target.path(String.format("github/%s.json", travisContext.getRepoSlug()))
+            target.path("github/{user}/{repo}.json")
+                    .resolveTemplate("user", travisContext.getUser())
+                    .resolveTemplate("repo", travisContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonObject.class);
