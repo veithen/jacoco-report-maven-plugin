@@ -163,6 +163,10 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
             log.info("No coverage data collected; skipping execution.");
             return;
         }
+        if (results.stream().map(CoverageData::getClasses).allMatch(Objects::isNull)) {
+            log.info("No classes included; skipping execution.");
+            return;
+        }
         TravisContext travisContext;
         if (repoSlug != null && jobId != null && commit != null) {
             travisContext = new TravisContext(repoSlug, jobId, commit);
