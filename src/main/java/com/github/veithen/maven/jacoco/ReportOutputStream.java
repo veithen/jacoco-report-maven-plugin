@@ -41,7 +41,7 @@ final class ReportOutputStream extends ByteArrayOutputStream {
     public void close() throws IOException {
         multipart.bodyPart(new FormDataBodyPart(
                 FormDataContentDisposition.name("file").fileName("report/" + path).build(),
-                buf,
+                toByteArray(),
                 MediaType.APPLICATION_OCTET_STREAM_TYPE));
     }
 }
