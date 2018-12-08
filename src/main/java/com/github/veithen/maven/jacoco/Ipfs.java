@@ -19,10 +19,13 @@
  */
 package com.github.veithen.maven.jacoco;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.ConnectException;
 import java.util.Locale;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
@@ -36,6 +39,8 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.report.html.HTMLFormatter;
 
 final class Ipfs implements CoverageService {
+    private static final String ROOT_DIR = "report";
+
     private final WebTarget target;
 
     Ipfs(WebTarget target) {
@@ -65,23 +70,42 @@ final class Ipfs implements CoverageService {
     public void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
         FormDataMultiPart multipart = new FormDataMultiPart();
         multipart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName("report").build(),
+                FormDataContentDisposition.name("file").fileName(ROOT_DIR).build(),
                 new byte[0],
                 new MediaType("application", "x-directory")));
         HTMLFormatter htmlFormatter = new HTMLFormatter();
         htmlFormatter.setOutputEncoding("utf-8");
         htmlFormatter.setLocale(Locale.ENGLISH);
         try {
-            coverageContext.visit(htmlFormatter.createVisitor(new MultiReportOutput(multipart)));
+            coverageContext.visit(htmlFormatter.createVisitor(new MultiReportOutput((path, content) -> {
+                multipart.bodyPart(new FormDataBodyPart(
+                        FormDataContentDisposition.name("file").fileName(ROOT_DIR + "/" + path).build(),
+                        content,
+                        MediaType.APPLICATION_OCTET_STREAM_TYPE));
+            })));
         } catch (IOException ex) {
             throw new MojoFailureException(String.format("Failed to generate coverage report: %s", ex.getMessage()), ex);
         }
-        System.out.println(target.path("api/v0/add")
+        // The response isn't proper JSON. It's a sequence of JSON objects, one per line.
+        String response = target.path("api/v0/add")
                 // https://stackoverflow.com/questions/37580093/ipfs-add-returns-2-jsons
                 .queryParam("progress", "false")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 // https://github.com/ipfs/java-ipfs-http-client/commit/2d1ffbcf6643e460ee1ba9581358f4735e954f09
                 .header("Expect", "100-continue")
-                .post(Entity.entity(multipart, multipart.getMediaType()), String.class));
+                .post(Entity.entity(multipart, multipart.getMediaType()), String.class);
+        try (BufferedReader reader = new BufferedReader(new StringReader(response))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JsonObject object = Json.createReader(new StringReader(line)).readObject();
+                if (object.getString("Name").equals(ROOT_DIR)) {
+                    System.out.println(object.getString("Hash"));
+                    break;
+                }
+            }
+        } catch (IOException ex) {
+            // We should never get here because we are doing I/O on a StringReader.
+            throw new Error(ex);
+        }
     }
 }

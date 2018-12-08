@@ -21,27 +21,19 @@ package com.github.veithen.maven.jacoco;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import javax.ws.rs.core.MediaType;
-
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import java.util.function.BiConsumer;
 
 final class ReportOutputStream extends ByteArrayOutputStream {
-    private final FormDataMultiPart multipart;
+    private final BiConsumer<String, byte[]> consumer;
     private final String path;
 
-    ReportOutputStream(FormDataMultiPart multipart, String path) {
-        this.multipart = multipart;
+    ReportOutputStream(BiConsumer<String, byte[]> consumer, String path) {
+        this.consumer = consumer;
         this.path = path;
     }
 
     @Override
     public void close() throws IOException {
-        multipart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName("report/" + path).build(),
-                toByteArray(),
-                MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        consumer.accept(path, toByteArray());
     }
 }

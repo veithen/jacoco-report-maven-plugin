@@ -21,20 +21,20 @@ package com.github.veithen.maven.jacoco;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.function.BiConsumer;
 
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.report.IMultiReportOutput;
 
 final class MultiReportOutput implements IMultiReportOutput {
-    private final FormDataMultiPart multipart;
+    private final BiConsumer<String, byte[]> consumer;
 
-    MultiReportOutput(FormDataMultiPart multipart) {
-        this.multipart = multipart;
+    MultiReportOutput(BiConsumer<String, byte[]> consumer) {
+        this.consumer = consumer;
     }
 
     @Override
     public OutputStream createFile(String path) throws IOException {
-        return new ReportOutputStream(multipart, path);
+        return new ReportOutputStream(consumer, path);
     }
 
     @Override
