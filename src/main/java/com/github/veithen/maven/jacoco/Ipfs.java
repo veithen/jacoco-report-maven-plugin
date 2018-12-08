@@ -67,7 +67,7 @@ final class Ipfs implements CoverageService {
     }
 
     @Override
-    public void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
         FormDataMultiPart multipart = new FormDataMultiPart();
         multipart.bodyPart(new FormDataBodyPart(
                 FormDataContentDisposition.name("file").fileName(ROOT_DIR).build(),
@@ -99,13 +99,13 @@ final class Ipfs implements CoverageService {
             while ((line = reader.readLine()) != null) {
                 JsonObject object = Json.createReader(new StringReader(line)).readObject();
                 if (object.getString("Name").equals(ROOT_DIR)) {
-                    System.out.println(object.getString("Hash"));
-                    break;
+                    return String.format("https://ipfs.io/ipfs/%s/index.html", object.getString("Hash"));
                 }
             }
         } catch (IOException ex) {
             // We should never get here because we are doing I/O on a StringReader.
             throw new Error(ex);
         }
+        throw new MojoFailureException("Failed to extract hash from IPFS response");
     }
 }

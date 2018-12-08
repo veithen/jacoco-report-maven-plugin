@@ -24,5 +24,5 @@ import org.apache.maven.plugin.MojoFailureException;
 interface CoverageService {
     String getName();
     boolean isEnabled(TravisContext travisContext);
-    void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException;
+    String upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException;
 }

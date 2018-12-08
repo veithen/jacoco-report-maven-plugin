@@ -61,7 +61,7 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public void upload(TravisContext travisContext, CoverageContext coverageContext) {
+    public String upload(TravisContext travisContext, CoverageContext coverageContext) {
         // Use JSON reporting because source file locations can't be properly resolved
         // from a JaCoCo XML report.
         JsonObjectBuilder sourceFilesBuilder = Json.createObjectBuilder();
@@ -92,12 +92,13 @@ final class Codecov implements CoverageService {
             }
         }
         JsonObject report = Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
-        System.out.println(target.path("upload/v2")
+        target.path("upload/v2")
                 .queryParam("service", "travis")
                 .queryParam("slug", travisContext.getRepoSlug())
                 .queryParam("job", travisContext.getJobId())
                 .queryParam("commit", travisContext.getCommit())
                 .request()
-                .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class));
+                .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class);
+        return target.path(String.format("gh/%s/tree/%s", travisContext.getRepoSlug(), travisContext.getCommit())).getUri().toString();
     }
 }

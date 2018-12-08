@@ -214,12 +214,13 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
         CoverageContext coverageContext = new CoverageContext(loader, bundle, sourceFiles, findRootDir());
         for (CoverageService service : coverageServices) {
+            String link;
             try {
-                service.upload(travisContext, coverageContext);
+                link = service.upload(travisContext, coverageContext);
             } catch (WebApplicationException ex) {
                 throw processException(service.getName(), ex);
             }
-            log.info(String.format("Successfully uploaded coverage data to %s", service.getName()));
+            log.info(String.format("Successfully uploaded coverage data to %s: %s", service.getName(), link));
         }
     }
 }

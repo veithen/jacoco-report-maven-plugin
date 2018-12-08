@@ -65,7 +65,7 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public void upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
@@ -106,6 +106,9 @@ final class Coveralls implements CoverageService {
                 FormDataContentDisposition.name("json_file").fileName("coverage.json").build(),
                 jsonFile,
                 MediaType.APPLICATION_JSON_TYPE));
-        System.out.println(target.path("api/v1/jobs").request().post(Entity.entity(multipart, multipart.getMediaType()), String.class));
+        return target.path("api/v1/jobs")
+                .request()
+                .post(Entity.entity(multipart, multipart.getMediaType()), JsonObject.class)
+                .getString("url");
     }
 }
