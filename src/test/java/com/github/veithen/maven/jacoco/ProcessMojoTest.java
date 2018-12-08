@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 import org.apache.maven.plugin.MojoFailureException;
 import org.junit.Test;
 
-public class UploadMojoTest {
+public class ProcessMojoTest {
     @Test
     public void testProcessException() {
         JsonObject content = Json.createReader(new StringReader(
@@ -41,7 +41,7 @@ public class UploadMojoTest {
         Response response = mock(Response.class);
         when(response.readEntity(JsonObject.class)).thenReturn(content);
         when(response.getStatusInfo()).thenReturn(Response.Status.INTERNAL_SERVER_ERROR);
-        MojoFailureException exception = UploadMojo.processException("Foobar", new WebApplicationException(response));
+        MojoFailureException exception = ProcessMojo.processException("Foobar", new WebApplicationException(response));
         assertThat(exception.getMessage()).isEqualTo("Failed to send request to Foobar: JSON file not found or failed to parse.");
     }
 }

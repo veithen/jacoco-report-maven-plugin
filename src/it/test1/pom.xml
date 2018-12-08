@@ -57,7 +57,7 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>upload</goal>
+                            <goal>process</goal>
                         </goals>
                         <configuration>
                             <coverallsApiEndpoint>http://localhost:@httpPort@/coveralls</coverallsApiEndpoint>

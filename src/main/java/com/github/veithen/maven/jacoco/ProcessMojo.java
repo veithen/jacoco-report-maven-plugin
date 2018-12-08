@@ -50,8 +50,8 @@ import org.jacoco.core.tools.ExecFileLoader;
 
 import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
-@Mojo(name="upload", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
-public final class UploadMojo extends AggregatingMojo<CoverageData> {
+@Mojo(name="process", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
+public final class ProcessMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
@@ -76,7 +76,7 @@ public final class UploadMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="http://localhost:5001", required=true)
     private String ipfsApiEndpoint;
 
-    public UploadMojo() {
+    public ProcessMojo() {
         super(CoverageData.class);
     }
 
