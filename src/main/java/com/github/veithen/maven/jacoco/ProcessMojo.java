@@ -118,10 +118,11 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             }
         }
         if (dataFileExists || !sources.isEmpty()) {
+            File classes = new File(project.getBuild().getOutputDirectory());
             return new CoverageData(
                     // Can't use optional here because it's not serializable.
                     dataFileExists ? dataFile : null,
-                    includeClasses ? project.getArtifact().getFile() : null,
+                    includeClasses && classes.exists() ? classes : null,
                     sources);
         } else {
             return null;
