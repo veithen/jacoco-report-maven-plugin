@@ -26,20 +26,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.function.Supplier;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.maven.plugin.MojoFailureException;
 
 final class Source {
     private final File file;
-    private final File rootDir;
+    private final Supplier<File> rootDirSupplier;
 
-    Source(File file, File rootDir) {
+    Source(File file, Supplier<File> rootDir) {
         this.file = file;
-        this.rootDir = rootDir;
+        this.rootDirSupplier = rootDir;
     }
 
     String getPathRelativeToRepositoryRoot() {
+        File rootDir = rootDirSupplier.get();
         File file = this.file;
         Deque<String> components = new LinkedList<>();
         while (!file.equals(rootDir)) {

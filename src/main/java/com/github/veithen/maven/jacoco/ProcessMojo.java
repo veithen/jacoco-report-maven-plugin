@@ -125,12 +125,12 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         }
     }
 
-    private File findRootDir() throws MojoExecutionException {
+    private File findRootDir() {
         File rootDir = project.getBasedir();
         while (!new File(rootDir, ".git").exists()) {
             rootDir = rootDir.getParentFile();
             if (rootDir == null) {
-                throw new MojoExecutionException("Root directory not found; are we running from a Git clone?");
+                throw new IllegalStateException("Root directory not found; are we running from a Git clone?");
             }
         }
         return rootDir;
@@ -212,7 +212,11 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
-        CoverageContext coverageContext = new CoverageContext(loader, bundle, sourceFiles, findRootDir());
+        CoverageContext coverageContext = new CoverageContext(
+                loader, bundle, sourceFiles,
+                // Only try to find the root directory if we need to, so that the plugin works with
+                // Subversion and IPFS.
+                new Lazy<File>(this::findRootDir));
         for (CoverageService service : coverageServices) {
             String link;
             try {

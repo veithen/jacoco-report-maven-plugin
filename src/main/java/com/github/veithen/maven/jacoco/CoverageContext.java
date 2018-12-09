@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,13 +42,13 @@ final class CoverageContext {
     private final ExecFileLoader loader;
     private final IBundleCoverage bundle;
     private final Map<String, File> sourceFiles;
-    private final File rootDir;
+    private final Supplier<File> rootDirSupplier;
 
-    CoverageContext(ExecFileLoader loader, IBundleCoverage bundle, Map<String, File> sourceFiles, File rootDir) {
+    CoverageContext(ExecFileLoader loader, IBundleCoverage bundle, Map<String, File> sourceFiles, Supplier<File> rootDirSupplier) {
         this.loader = loader;
         this.bundle = bundle;
         this.sourceFiles = sourceFiles;
-        this.rootDir = rootDir;
+        this.rootDirSupplier = rootDirSupplier;
     }
 
     IBundleCoverage getBundle() {
@@ -83,6 +84,6 @@ final class CoverageContext {
 
     Source lookupSource(ISourceFileCoverage sourceFileCoverage) {
         File sourceFile = sourceFiles.get(sourceFileCoverage.getPackageName().replace('.', '/') + "/" + sourceFileCoverage.getName());
-        return sourceFile == null ? null : new Source(sourceFile, rootDir);
+        return sourceFile == null ? null : new Source(sourceFile, rootDirSupplier);
     }
 }
