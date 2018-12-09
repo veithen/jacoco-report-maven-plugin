@@ -86,7 +86,7 @@
         <dependency>
             <groupId>com.github.veithen.maven.shared</groupId>
             <artifactId>aggregating-mojo</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.jacoco</groupId>
@@ -190,7 +190,7 @@
             <plugin>
                 <groupId>com.github.veithen.daemon</groupId>
                 <artifactId>daemon-maven-plugin</artifactId>
-                <version>0.2-SNAPSHOT</version>
+                <version>0.1.1</version>
                 <executions>
                     <execution>
                         <goals>
