@@ -61,6 +61,9 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", readonly=true)
     private String jobId;
 
+    @Parameter(defaultValue="${env.TRAVIS_BRANCH}", readonly=true)
+    private String branch;
+
     @Parameter(defaultValue="${env.TRAVIS_COMMIT}", readonly=true)
     private String commit;
 
@@ -168,8 +171,8 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             return;
         }
         TravisContext travisContext;
-        if (repoSlug != null && jobId != null && commit != null) {
-            travisContext = new TravisContext(repoSlug, jobId, commit);
+        if (repoSlug != null && jobId != null && branch != null && commit != null) {
+            travisContext = new TravisContext(repoSlug, jobId, branch, commit);
         } else {
             travisContext = null;
         }

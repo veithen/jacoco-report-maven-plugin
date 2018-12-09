@@ -235,6 +235,7 @@
                             <environmentVariables>
                                 <TRAVIS_JOB_ID>123456</TRAVIS_JOB_ID>
                                 <TRAVIS_REPO_SLUG>dummy/test</TRAVIS_REPO_SLUG>
+                                <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
                                 <TRAVIS_COMMIT>4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33</TRAVIS_COMMIT>
                             </environmentVariables>
                         </configuration>
@@ -252,6 +253,7 @@
                             <environmentVariables>
                                 <TRAVIS_JOB_ID>654321</TRAVIS_JOB_ID>
                                 <TRAVIS_REPO_SLUG>dummy/foobar</TRAVIS_REPO_SLUG>
+                                <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
                                 <TRAVIS_COMMIT>c56d6502b9eb6dcde8aa334d4f3aba8752b5147f</TRAVIS_COMMIT>
                             </environmentVariables>
                         </configuration>

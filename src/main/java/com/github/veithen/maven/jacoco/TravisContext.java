@@ -22,11 +22,13 @@ package com.github.veithen.maven.jacoco;
 final class TravisContext {
     private final String repoSlug;
     private final String jobId;
+    private final String branch;
     private final String commit;
 
-    TravisContext(String repoSlug, String jobId, String commit) {
+    TravisContext(String repoSlug, String jobId, String branch, String commit) {
         this.repoSlug = repoSlug;
         this.jobId = jobId;
+        this.branch = branch;
         this.commit = commit;
     }
 
@@ -44,6 +46,10 @@ final class TravisContext {
 
     String getJobId() {
         return jobId;
+    }
+
+    String getBranch() {
+        return branch;
     }
 
     String getCommit() {
