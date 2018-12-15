@@ -17,6 +17,21 @@ To use the plugin, add the following to your project's root POM:
         </executions>
     </plugin>
 
+This would be used in conjunction with the standard jacoco-maven-plugin to generate the execution data that is processed by jacoco-report-maven-plugin:
+
+    <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.2</version>
+        <executions>
+            <execution>
+                <goals>
+                    <goal>prepare-agent</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+
 When running on [Travis](https://travis-ci.org) this will automatically upload reports to coveralls.io and/or codecov.io if the project is enabled on one of these services. Note that public Github repositories are always enabled on codecov.io by default, so no further action is required for that service.
 
 You might want to exclude the code from some modules from the coverage reports, e.g. modules that contain test utilities. In this case, set the `includeClasses` parameter to false for those modules:
