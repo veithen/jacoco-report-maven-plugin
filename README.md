@@ -43,3 +43,17 @@ You might want to exclude the code from some modules from the coverage reports, 
             <includeClasses>false</includeClasses>
         </configuration>
     </plugin>
+
+If your project provides a Maven plugin and has integration tests set up with [maven-invoker-plugin](https://maven.apache.org/plugins/maven-invoker-plugin/), use the following configuration to collect coverage data from those integration tests:
+
+    <pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mavenOpts>${argLine}</mavenOpts>
+                </configuration>
+            </plugin>
+        </plugins>
+    </pluginManagement>
