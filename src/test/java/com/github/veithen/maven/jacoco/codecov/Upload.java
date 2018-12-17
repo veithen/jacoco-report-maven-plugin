@@ -36,13 +36,15 @@ public class Upload {
     public String post(
             @QueryParam("service") String service,
             @QueryParam("slug") String slug,
-            @QueryParam("job") String jobId,
+            @QueryParam("job") String job,
+            @QueryParam("build") String build,
             @QueryParam("commit") String commit,
             @QueryParam("branch") String branch,
             String body) {
         assertThat(service).isEqualTo("travis");
         assertThat(slug).isEqualTo("dummy/test");
-        assertThat(jobId).isEqualTo("123456");
+        assertThat(job).isEqualTo("123456");
+        assertThat(build).isEqualTo("45.1");
         assertThat(commit).isEqualTo("4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33");
         assertThat(branch).isEqualTo("master");
         return "";
