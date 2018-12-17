@@ -99,6 +99,7 @@ final class Codecov implements CoverageService {
                 .queryParam("slug", travisContext.getRepoSlug())
                 .queryParam("job", travisContext.getJobId())
                 .queryParam("build", travisContext.getJobNumber())
+                .queryParam("build_url", travisContext.getJobUrl())
                 .queryParam("branch", travisContext.getBranch())
                 .queryParam("commit", travisContext.getCommit())
                 .request()

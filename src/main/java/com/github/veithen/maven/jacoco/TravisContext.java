@@ -23,12 +23,14 @@ final class TravisContext {
     private final String repoSlug;
     private final String jobId;
     private final String jobNumber;
+    private final String jobUrl;
     private final String branch;
     private final String commit;
 
-    TravisContext(String repoSlug, String jobId, String jobNumber, String branch, String commit) {
+    TravisContext(String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
         this.repoSlug = repoSlug;
         this.jobId = jobId;
+        this.jobUrl = jobUrl;
         this.jobNumber = jobNumber;
         this.branch = branch;
         this.commit = commit;
@@ -52,6 +54,10 @@ final class TravisContext {
 
     String getJobNumber() {
         return jobNumber;
+    }
+
+    String getJobUrl() {
+        return jobUrl;
     }
 
     String getBranch() {

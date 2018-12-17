@@ -38,6 +38,7 @@ public class Upload {
             @QueryParam("slug") String slug,
             @QueryParam("job") String job,
             @QueryParam("build") String build,
+            @QueryParam("build_url") String buildUrl,
             @QueryParam("commit") String commit,
             @QueryParam("branch") String branch,
             String body) {
@@ -45,6 +46,7 @@ public class Upload {
         assertThat(slug).isEqualTo("dummy/test");
         assertThat(job).isEqualTo("123456");
         assertThat(build).isEqualTo("45.1");
+        assertThat(buildUrl).isEqualTo("https://travis-ci.org/dummy/test/jobs/123456");
         assertThat(commit).isEqualTo("4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33");
         assertThat(branch).isEqualTo("master");
         return "";
