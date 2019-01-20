@@ -21,6 +21,10 @@ package com.github.veithen.maven.jacoco.coveralls;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
@@ -40,7 +44,7 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String post(@HeaderParam(HttpHeaders.USER_AGENT) String userAgent, FormDataMultiPart multipart) {
+    public String post(@HeaderParam(HttpHeaders.USER_AGENT) String userAgent, FormDataMultiPart multipart) throws Exception {
         assertThat(userAgent).startsWith("com.github.veithen.maven:jacoco-report-maven-plugin/");
         FormDataBodyPart jsonFilePart = multipart.getField("json_file");
         assertThat(jsonFilePart).isNotNull();
@@ -59,6 +63,9 @@ public class Job {
             coveredLines += coverage.getInt(i, 0);
         }
         assertThat(coveredLines).isEqualTo(2);
+        try (OutputStream out = new FileOutputStream("target/coveralls.json")) {
+            Json.createWriter(out).write(jsonFile);
+        }
         return "{\"message\":\"Job #44.1\",\"url\":\"https://coveralls.io/jobs/42722376\"}";
     }
 }

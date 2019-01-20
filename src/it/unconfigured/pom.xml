@@ -41,7 +41,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.1</version>
                 <configuration>
-                    <argLine>@argLine@</argLine>
+                    <argLine>${argLine} @securityArgLine@</argLine>
                 </configuration>
             </plugin>
             <plugin>

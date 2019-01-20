@@ -183,6 +183,14 @@
                 <artifactId>hermetic-maven-plugin</artifactId>
                 <configuration>
                     <allowExec>true</allowExec>
+                    <property>securityArgLine</property>
+                    <append>false</append>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>${argLine} ${securityArgLine}</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -219,6 +227,7 @@
                             <resourceBases>
                                 <resourceBase>src/test/webapp</resourceBase>
                             </resourceBases>
+                            <argLine>${argLine} ${securityArgLine}</argLine>
                         </configuration>
                     </execution>
                 </executions>
@@ -280,6 +289,11 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <argLine>${argLine} ${securityArgLine}</argLine>
+                    <!-- We want to use Google Truth in verification scripts -->
+                    <addTestClassPath>true</addTestClassPath>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
