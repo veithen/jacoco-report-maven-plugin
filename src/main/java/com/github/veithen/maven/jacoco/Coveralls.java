@@ -73,7 +73,7 @@ final class Coveralls implements CoverageService {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
                 Source source = coverageContext.lookupSource(sourceFileCoverage);
                 if (source == null) {
-                    break;
+                    continue;
                 }
                 JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
                 for (int i=1; i<sourceFileCoverage.getFirstLine(); i++) {

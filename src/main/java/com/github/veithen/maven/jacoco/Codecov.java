@@ -71,7 +71,7 @@ final class Codecov implements CoverageService {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
                 Source source = coverageContext.lookupSource(sourceFileCoverage);
                 if (source == null) {
-                    break;
+                    continue;
                 }
                 JsonObjectBuilder coverageBuilder = Json.createObjectBuilder();
                 for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
