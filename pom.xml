@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.github.veithen</groupId>
         <artifactId>parent</artifactId>
-        <version>19-SNAPSHOT</version>
+        <version>20-SNAPSHOT</version>
     </parent>
 
     <groupId>com.github.veithen.maven</groupId>
@@ -235,7 +235,6 @@
             <plugin>
                 <groupId>com.github.veithen.invoker</groupId>
                 <artifactId>resolver-proxy-maven-plugin</artifactId>
-                <version>0.1.2</version>
                 <executions>
                     <execution>
                         <goals>
