@@ -7,13 +7,13 @@ jdk:
   - openjdk11
 before_install: if [ -e $JAVA_HOME/lib/security/cacerts ]; then ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts; fi
 install: true
-script: mvn -B -s .travis-settings.xml -Prelease -Dgpg.skip=true verify
+script: mvn -B -e -s .travis-settings.xml -Prelease -Dgpg.skip=true verify
 before_cache: "find $HOME/.m2 -name '*-SNAPSHOT' -a -type d -print0 | xargs -0 rm -rf"
 jobs:
   include:
     - if: repo = "veithen/jacoco-report-maven-plugin" AND branch = master AND type = push
       stage: deploy
-      script: mvn -B -s .travis-settings.xml -Prelease -Dgpg.skip=true -DskipTests=true deploy
+      script: mvn -B -e -s .travis-settings.xml -Prelease -Dgpg.skip=true -DskipTests=true deploy
       env:
         - secure: "VKjS/zxjhronlD2eiEMp2fgMzIttNSordvwPnfk622fWxwcDVt0xFYtSKzEdtePCDPFPlTSFWDHMYDSTmROTNuvAzCnMHOU/RItLItH9qibh/XLrdQWz0/ymL6WFIiSWCAalc24K5iwjI+eZl1MPeiqKneYRsxTp42BeiY+sADxQQxaMqvNn7Ud9VfHE1qtMuSFEQruLi7CuZAOiPxCfnN0ovogdGuGt4jvIJfLQ/wWQcEAObH3fOjpl4iEBnP8qOiC23fKGiRusOns55rPS014pRepsyEn5gEYaTicvYMaQCJBd3ZPsgXEVJo08gJ3qFo2/aWvA932frv/MLmDsGbGMucrkeO+sw1dYiG0ZNlohb5ZUIxr4a0h8um1put+R9QURcTCh4xGisA2JjQMv78lMsPwe2omOgyU3NR9VwHl4mGKg+t0RDurobpq+X+xf7LFLxtbpDHfS8n99pKWc7Rq2yXIRQq09y7/fqS42WmrmuVYOr64e+IUxJtJFzZcc31QBcfcImlTgzNY3aYRDHH5SMqARi7zYASGoR04Y0WaqjhoW0w1c2+thWln8YMFdomeSo8Ml3cYkbPWymTiDhbY/37268TUkVz/fCj9MIGL2eZv144TdIcwojcIV+sDBCf+udSC6OJQCC39iyCdCz4K0QiGwOnX6K0wtYXGmVqA="
 cache:
