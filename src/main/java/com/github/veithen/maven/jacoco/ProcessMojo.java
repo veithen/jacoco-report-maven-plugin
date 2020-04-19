@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import javax.json.JsonObject;
@@ -186,6 +187,8 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         Client client = ClientBuilder.newBuilder()
                 .register(MultiPartFeature.class)
                 .register(UserAgentFeature.class)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(1, TimeUnit.MINUTES)
                 .build();
         List<CoverageService> coverageServices = new ArrayList<>();
         coverageServices.add(new Coveralls(client.target(coverallsApiEndpoint)));

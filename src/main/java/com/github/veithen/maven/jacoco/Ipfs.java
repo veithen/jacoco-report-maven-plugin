@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -63,6 +64,9 @@ final class Ipfs implements CoverageService {
             } else {
                 throw ex;
             }
+        } catch (BadRequestException ex) {
+            // On Jenkins, port 5001 can be taken by the slave agent and the request fails with status 400.
+            return false;
         }
     }
 
