@@ -61,7 +61,9 @@ final class Coveralls implements CoverageService {
                     .resolveTemplate("repo", travisContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
-                    .get(JsonObject.class));
+                    // For newly enabled repositories, the API returns "null", i.e. this needs to
+                    // be JsonValue, not JsonObject.
+                    .get(JsonValue.class));
             return true;
         } catch (NotFoundException ex) {
             return false;
