@@ -19,6 +19,8 @@
  */
 package com.github.veithen.maven.jacoco;
 
+import static com.github.veithen.maven.jacoco.Retry.withRetry;
+
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -54,12 +56,12 @@ final class Coveralls implements CoverageService {
             return false;
         }
         try {
-            target.path("github/{user}/{repo}.json")
+            withRetry(() -> target.path("github/{user}/{repo}.json")
                     .resolveTemplate("user", travisContext.getUser())
                     .resolveTemplate("repo", travisContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
-                    .get(JsonObject.class);
+                    .get(JsonObject.class));
             return true;
         } catch (NotFoundException ex) {
             return false;

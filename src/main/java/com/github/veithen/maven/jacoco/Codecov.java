@@ -19,6 +19,8 @@
  */
 package com.github.veithen.maven.jacoco;
 
+import static com.github.veithen.maven.jacoco.Retry.withRetry;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -50,12 +52,12 @@ final class Codecov implements CoverageService {
             return false;
         }
         try {
-            target.path("api/gh/{user}/{repo}")
+            withRetry(() -> target.path("api/gh/{user}/{repo}")
                     .resolveTemplate("user", travisContext.getUser())
                     .resolveTemplate("repo", travisContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
-                    .get(JsonObject.class);
+                    .get(JsonObject.class));
             return true;
         } catch (NotFoundException ex) {
             return false;
