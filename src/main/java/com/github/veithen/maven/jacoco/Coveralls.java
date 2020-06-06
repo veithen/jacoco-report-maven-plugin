@@ -51,14 +51,14 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public boolean isEnabled(TravisContext travisContext) {
-        if (travisContext == null) {
+    public boolean isEnabled(ContinuousIntegrationContext ciContext) {
+        if (ciContext == null) {
             return false;
         }
         try {
             withRetry(() -> target.path("github/{user}/{repo}.json")
-                    .resolveTemplate("user", travisContext.getUser())
-                    .resolveTemplate("repo", travisContext.getRepository())
+                    .resolveTemplate("user", ciContext.getUser())
+                    .resolveTemplate("repo", ciContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
                     // For newly enabled repositories, the API returns "null", i.e. this needs to
@@ -71,7 +71,7 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public String upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) throws MojoFailureException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
@@ -104,7 +104,7 @@ final class Coveralls implements CoverageService {
         }
         JsonObject jsonFile = Json.createObjectBuilder()
                 .add("service_name", "travis-ci")
-                .add("service_job_id", travisContext.getJobId())
+                .add("service_job_id", ciContext.getJobId())
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
         FormDataMultiPart multipart = new FormDataMultiPart();

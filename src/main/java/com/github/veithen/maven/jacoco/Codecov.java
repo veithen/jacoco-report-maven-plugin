@@ -47,14 +47,14 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public boolean isEnabled(TravisContext travisContext) {
-        if (travisContext == null) {
+    public boolean isEnabled(ContinuousIntegrationContext ciContext) {
+        if (ciContext == null) {
             return false;
         }
         try {
             withRetry(() -> target.path("api/gh/{user}/{repo}")
-                    .resolveTemplate("user", travisContext.getUser())
-                    .resolveTemplate("repo", travisContext.getRepository())
+                    .resolveTemplate("user", ciContext.getUser())
+                    .resolveTemplate("repo", ciContext.getRepository())
                     .request()
                     .accept(MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonObject.class));
@@ -65,7 +65,7 @@ final class Codecov implements CoverageService {
     }
 
     @Override
-    public String upload(TravisContext travisContext, CoverageContext coverageContext) {
+    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) {
         // Use JSON reporting because source file locations can't be properly resolved
         // from a JaCoCo XML report.
         JsonObjectBuilder sourceFilesBuilder = Json.createObjectBuilder();
@@ -98,18 +98,18 @@ final class Codecov implements CoverageService {
         JsonObject report = Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
         target.path("upload/v2")
                 .queryParam("service", "travis")
-                .queryParam("slug", travisContext.getRepoSlug())
-                .queryParam("job", travisContext.getJobId())
-                .queryParam("build", travisContext.getJobNumber())
-                .queryParam("build_url", travisContext.getJobUrl())
-                .queryParam("branch", travisContext.getBranch())
-                .queryParam("commit", travisContext.getCommit())
+                .queryParam("slug", ciContext.getRepoSlug())
+                .queryParam("job", ciContext.getJobId())
+                .queryParam("build", ciContext.getJobNumber())
+                .queryParam("build_url", ciContext.getJobUrl())
+                .queryParam("branch", ciContext.getBranch())
+                .queryParam("commit", ciContext.getCommit())
                 .request()
                 .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class);
         return target.path("gh/{user}/{repo}/tree/{commit}")
-                .resolveTemplate("user", travisContext.getUser())
-                .resolveTemplate("repo", travisContext.getRepository())
-                .resolveTemplate("commit", travisContext.getCommit())
+                .resolveTemplate("user", ciContext.getUser())
+                .resolveTemplate("repo", ciContext.getRepository())
+                .resolveTemplate("commit", ciContext.getCommit())
                 .getUri()
                 .toString();
     }

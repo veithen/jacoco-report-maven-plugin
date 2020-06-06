@@ -19,7 +19,7 @@
  */
 package com.github.veithen.maven.jacoco;
 
-final class TravisContext {
+public final class ContinuousIntegrationContext {
     private final String repoSlug;
     private final String jobId;
     private final String jobNumber;
@@ -27,7 +27,7 @@ final class TravisContext {
     private final String branch;
     private final String commit;
 
-    TravisContext(String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
+    public ContinuousIntegrationContext(String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
         this.repoSlug = repoSlug;
         this.jobId = jobId;
         this.jobUrl = jobUrl;
@@ -36,35 +36,35 @@ final class TravisContext {
         this.commit = commit;
     }
 
-    String getRepoSlug() {
+    public String getRepoSlug() {
         return repoSlug;
     }
 
-    String getUser() {
+    public String getUser() {
         return repoSlug.split("/")[0];
     }
 
-    String getRepository() {
+    public String getRepository() {
         return repoSlug.split("/")[1];
     }
 
-    String getJobId() {
+    public String getJobId() {
         return jobId;
     }
 
-    String getJobNumber() {
+    public String getJobNumber() {
         return jobNumber;
     }
 
-    String getJobUrl() {
+    public String getJobUrl() {
         return jobUrl;
     }
 
-    String getBranch() {
+    public String getBranch() {
         return branch;
     }
 
-    String getCommit() {
+    public String getCommit() {
         return commit;
     }
 }

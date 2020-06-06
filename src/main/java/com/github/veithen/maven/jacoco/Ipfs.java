@@ -54,7 +54,7 @@ final class Ipfs implements CoverageService {
     }
 
     @Override
-    public boolean isEnabled(TravisContext travisContext) {
+    public boolean isEnabled(ContinuousIntegrationContext ciContext) {
         try {
             target.path("api/v0/id").request(MediaType.APPLICATION_JSON_TYPE).get(JsonObject.class);
             return true;
@@ -71,7 +71,7 @@ final class Ipfs implements CoverageService {
     }
 
     @Override
-    public String upload(TravisContext travisContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) throws MojoFailureException {
         FormDataMultiPart multipart = new FormDataMultiPart();
         multipart.bodyPart(new FormDataBodyPart(
                 FormDataContentDisposition.name("file").fileName(ROOT_DIR).build(),

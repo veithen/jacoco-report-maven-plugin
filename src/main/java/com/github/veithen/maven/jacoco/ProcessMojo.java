@@ -39,6 +39,7 @@ import javax.ws.rs.client.ClientBuilder;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -56,24 +57,6 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
     private File dataFile;
 
-    @Parameter(defaultValue="${env.TRAVIS_REPO_SLUG}", readonly=true)
-    private String repoSlug;
-
-    @Parameter(defaultValue="${env.TRAVIS_JOB_ID}", readonly=true)
-    private String jobId;
-
-    @Parameter(defaultValue="${env.TRAVIS_JOB_NUMBER}", readonly=true)
-    private String jobNumber;
-
-    @Parameter(defaultValue="${env.TRAVIS_JOB_WEB_URL}", readonly=true)
-    private String jobUrl;
-
-    @Parameter(defaultValue="${env.TRAVIS_BRANCH}", readonly=true)
-    private String branch;
-
-    @Parameter(defaultValue="${env.TRAVIS_COMMIT}", readonly=true)
-    private String commit;
-
     @Parameter(defaultValue="true")
     private boolean includeClasses;
 
@@ -85,6 +68,9 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
 
     @Parameter(defaultValue="http://localhost:5001", required=true)
     private String ipfsApiEndpoint;
+
+    @Component(role=ContinuousIntegrationContextFactory.class)
+    private Map<String,ContinuousIntegrationContextFactory> continuousIntegrationContextFactories;
 
     public ProcessMojo() {
         super(CoverageData.class);
@@ -178,11 +164,12 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             log.info("No classes included; skipping execution.");
             return;
         }
-        TravisContext travisContext;
-        if (repoSlug != null && jobId != null && jobNumber != null && jobUrl != null && branch != null && commit != null) {
-            travisContext = new TravisContext(repoSlug, jobId, jobNumber, jobUrl, branch, commit);
-        } else {
-            travisContext = null;
+        ContinuousIntegrationContext ciContext = null;
+        for (ContinuousIntegrationContextFactory factory : continuousIntegrationContextFactories.values()) {
+            ciContext = factory.createContext(System.getenv());
+            if (ciContext != null) {
+                break;
+            }
         }
         Client client = ClientBuilder.newBuilder()
                 .register(MultiPartFeature.class)
@@ -196,7 +183,7 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         coverageServices.add(new Ipfs(client.target(ipfsApiEndpoint)));
         for (Iterator<CoverageService> it = coverageServices.iterator(); it.hasNext(); ) {
             CoverageService service = it.next();
-            if (!service.isEnabled(travisContext)) {
+            if (!service.isEnabled(ciContext)) {
                 log.info(String.format("%s not configured/enabled", service.getName()));
                 it.remove();
             }
@@ -233,7 +220,7 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         for (CoverageService service : coverageServices) {
             String link;
             try {
-                link = service.upload(travisContext, coverageContext);
+                link = service.upload(ciContext, coverageContext);
             } catch (WebApplicationException ex) {
                 throw processException(service.getName(), ex);
             }

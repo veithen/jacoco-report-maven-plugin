@@ -19,10 +19,8 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import org.apache.maven.plugin.MojoFailureException;
+import java.util.Map;
 
-interface CoverageService {
-    String getName();
-    boolean isEnabled(ContinuousIntegrationContext ciContext);
-    String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) throws MojoFailureException;
+public interface ContinuousIntegrationContextFactory {
+    ContinuousIntegrationContext createContext(Map<String,String> env);
 }
