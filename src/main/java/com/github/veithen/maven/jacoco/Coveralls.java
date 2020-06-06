@@ -21,6 +21,8 @@ package com.github.veithen.maven.jacoco;
 
 import static com.github.veithen.maven.jacoco.Retry.withRetry;
 
+import java.util.Map;
+
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -40,9 +42,11 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Coveralls implements CoverageService {
     private final WebTarget target;
+    private final Map<String,String> serviceMap;
 
     Coveralls(WebTarget target) {
         this.target = target;
+        serviceMap = ServiceMap.loadServiceMap("META-INF/coveralls-services.properties");
     }
 
     @Override
@@ -52,7 +56,7 @@ final class Coveralls implements CoverageService {
 
     @Override
     public boolean isEnabled(ContinuousIntegrationContext ciContext) {
-        if (ciContext == null) {
+        if (ciContext == null || !serviceMap.containsKey(ciContext.getService())) {
             return false;
         }
         try {
@@ -103,7 +107,7 @@ final class Coveralls implements CoverageService {
             }
         }
         JsonObject jsonFile = Json.createObjectBuilder()
-                .add("service_name", "travis-ci")
+                .add("service_name", serviceMap.get(ciContext.getService()))
                 .add("service_job_id", ciContext.getJobId())
                 .add("source_files", sourceFilesBuilder.build())
                 .build();

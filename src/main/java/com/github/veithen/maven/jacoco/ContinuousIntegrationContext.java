@@ -20,6 +20,7 @@
 package com.github.veithen.maven.jacoco;
 
 public final class ContinuousIntegrationContext {
+    private final String service;
     private final String repoSlug;
     private final String jobId;
     private final String jobNumber;
@@ -27,13 +28,18 @@ public final class ContinuousIntegrationContext {
     private final String branch;
     private final String commit;
 
-    public ContinuousIntegrationContext(String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
+    public ContinuousIntegrationContext(String service, String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
+        this.service = service;
         this.repoSlug = repoSlug;
         this.jobId = jobId;
         this.jobUrl = jobUrl;
         this.jobNumber = jobNumber;
         this.branch = branch;
         this.commit = commit;
+    }
+
+    public String getService() {
+        return service;
     }
 
     public String getRepoSlug() {

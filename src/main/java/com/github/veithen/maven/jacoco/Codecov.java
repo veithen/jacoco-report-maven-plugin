@@ -21,6 +21,8 @@ package com.github.veithen.maven.jacoco;
 
 import static com.github.veithen.maven.jacoco.Retry.withRetry;
 
+import java.util.Map;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -36,9 +38,11 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Codecov implements CoverageService {
     private final WebTarget target;
+    private final Map<String,String> serviceMap;
 
     Codecov(WebTarget target) {
         this.target = target;
+        serviceMap = ServiceMap.loadServiceMap("META-INF/codecov-services.properties");
     }
 
     @Override
@@ -48,7 +52,7 @@ final class Codecov implements CoverageService {
 
     @Override
     public boolean isEnabled(ContinuousIntegrationContext ciContext) {
-        if (ciContext == null) {
+        if (ciContext == null || !serviceMap.containsKey(ciContext.getService())) {
             return false;
         }
         try {
@@ -97,7 +101,7 @@ final class Codecov implements CoverageService {
         }
         JsonObject report = Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
         target.path("upload/v2")
-                .queryParam("service", "travis")
+                .queryParam("service", serviceMap.get(ciContext.getService()))
                 .queryParam("slug", ciContext.getRepoSlug())
                 .queryParam("job", ciContext.getJobId())
                 .queryParam("build", ciContext.getJobNumber())
