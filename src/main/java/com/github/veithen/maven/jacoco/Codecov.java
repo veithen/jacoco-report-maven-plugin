@@ -108,6 +108,7 @@ final class Codecov implements CoverageService {
                 .queryParam("build_url", ciContext.getBuildUrl())
                 .queryParam("branch", ciContext.getBranch())
                 .queryParam("commit", ciContext.getCommit())
+                .queryParam("pr", ciContext.getPullRequest())
                 .request()
                 .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class);
         return target.path("gh/{user}/{repo}/tree/{commit}")

@@ -37,7 +37,7 @@ public class TravisContextFactory implements ContinuousIntegrationContextFactory
         String branch = env.get("TRAVIS_BRANCH");
         String commit = env.get("TRAVIS_COMMIT");
         if (repoSlug != null && jobId != null && jobNumber != null && jobUrl != null && branch != null && commit != null) {
-            return new ContinuousIntegrationContext("travis", repoSlug, jobId, jobNumber, jobUrl, branch, commit);
+            return new ContinuousIntegrationContext("travis", repoSlug, jobId, jobNumber, jobUrl, branch, commit, env.get("TRAVIS_PULL_REQUEST"));
         } else {
             return null;
         }

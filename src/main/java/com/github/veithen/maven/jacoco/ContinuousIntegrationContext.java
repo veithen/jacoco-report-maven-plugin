@@ -27,8 +27,9 @@ public final class ContinuousIntegrationContext {
     private final String buildUrl;
     private final String branch;
     private final String commit;
+    private final String pullRequest;
 
-    public ContinuousIntegrationContext(String service, String repoSlug, String buildRunId, String buildId, String buildUrl, String branch, String commit) {
+    public ContinuousIntegrationContext(String service, String repoSlug, String buildRunId, String buildId, String buildUrl, String branch, String commit, String pullRequest) {
         this.service = service;
         this.repoSlug = repoSlug;
         this.buildRunId = buildRunId;
@@ -36,6 +37,7 @@ public final class ContinuousIntegrationContext {
         this.buildId = buildId;
         this.branch = branch;
         this.commit = commit;
+        this.pullRequest = pullRequest;
     }
 
     public String getService() {
@@ -78,5 +80,9 @@ public final class ContinuousIntegrationContext {
 
     public String getCommit() {
         return commit;
+    }
+
+    public String getPullRequest() {
+        return pullRequest;
     }
 }

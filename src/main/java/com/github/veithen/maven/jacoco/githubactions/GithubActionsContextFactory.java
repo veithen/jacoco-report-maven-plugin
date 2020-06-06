@@ -37,20 +37,20 @@ public class GithubActionsContextFactory implements ContinuousIntegrationContext
         String commit = env.get("GITHUB_SHA");
         if (action != null && repoSlug != null && runId != null && ref != null && commit != null) {
             String branch;
-            String pr;
+            String pullRequest;
             if (ref.startsWith("refs/heads/")) {
                 branch = ref.substring(11);
-                pr = null;
+                pullRequest = null;
             } else if (ref.startsWith("refs/pull/") && ref.endsWith("/merge")) {
                 branch = env.get("GITHUB_HEAD_REF");
                 if (branch == null) {
                     return null;
                 }
-                pr = ref.substring(10, ref.length()-6);
+                pullRequest = ref.substring(10, ref.length()-6);
             } else {
                 return null;
             }
-            return new ContinuousIntegrationContext("github-actions", repoSlug, null, runId, String.format("http://github.com/%s/actions/runs/%s", repoSlug, runId), branch, commit);
+            return new ContinuousIntegrationContext("github-actions", repoSlug, null, runId, String.format("http://github.com/%s/actions/runs/%s", repoSlug, runId), branch, commit, pullRequest);
         } else {
             return null;
         }
