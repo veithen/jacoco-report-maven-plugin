@@ -1,11 +1,11 @@
-dist: trusty
+dist: bionic
 language: java
 jdk:
   - openjdk8
   - openjdk9
   - openjdk10
   - openjdk11
-before_install: if [ -e $JAVA_HOME/lib/security/cacerts ]; then ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts; fi
+before_install: if [ -e $JAVA_HOME/lib/security/cacerts ]; then sudo ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts; fi
 install: true
 script: mvn -B -e -s .travis-settings.xml -Prelease -Dgpg.skip=true verify
 before_cache: "find $HOME/.m2 -name '*-SNAPSHOT' -a -type d -print0 | xargs -0 rm -rf"
