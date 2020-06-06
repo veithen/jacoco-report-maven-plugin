@@ -171,6 +171,16 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
                 break;
             }
         }
+        if (ciContext != null) {
+            log.info("Continuous integration context:");
+            log.info("  Repo slug: " + ciContext.getRepoSlug());
+            log.info("  Branch: " + ciContext.getBranch());
+            log.info("  Commit: " + ciContext.getCommit());
+            log.info("  Service: " + ciContext.getService());
+            log.info("  Build ID: " + ciContext.getBuildId());
+            log.info("  Build run ID: " + ciContext.getBuildRunId());
+            log.info("  Build URL: " + ciContext.getBuildUrl());
+        }
         Client client = ClientBuilder.newBuilder()
                 .register(MultiPartFeature.class)
                 .register(UserAgentFeature.class)

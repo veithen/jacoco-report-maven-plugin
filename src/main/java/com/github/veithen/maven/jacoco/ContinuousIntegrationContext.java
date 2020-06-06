@@ -22,18 +22,18 @@ package com.github.veithen.maven.jacoco;
 public final class ContinuousIntegrationContext {
     private final String service;
     private final String repoSlug;
-    private final String jobId;
-    private final String jobNumber;
-    private final String jobUrl;
+    private final String buildRunId;
+    private final String buildId;
+    private final String buildUrl;
     private final String branch;
     private final String commit;
 
-    public ContinuousIntegrationContext(String service, String repoSlug, String jobId, String jobNumber, String jobUrl, String branch, String commit) {
+    public ContinuousIntegrationContext(String service, String repoSlug, String buildRunId, String buildId, String buildUrl, String branch, String commit) {
         this.service = service;
         this.repoSlug = repoSlug;
-        this.jobId = jobId;
-        this.jobUrl = jobUrl;
-        this.jobNumber = jobNumber;
+        this.buildRunId = buildRunId;
+        this.buildUrl = buildUrl;
+        this.buildId = buildId;
         this.branch = branch;
         this.commit = commit;
     }
@@ -54,16 +54,22 @@ public final class ContinuousIntegrationContext {
         return repoSlug.split("/")[1];
     }
 
-    public String getJobId() {
-        return jobId;
+    /**
+     * Get the build run ID. Unique for every build, i.e. changes when a build is re-run.
+     */
+    public String getBuildRunId() {
+        return buildRunId;
     }
 
-    public String getJobNumber() {
-        return jobNumber;
+    /**
+     * Get the build ID. Changes with every commit but doesn't change when a build is re-run.
+     */
+    public String getBuildId() {
+        return buildId;
     }
 
-    public String getJobUrl() {
-        return jobUrl;
+    public String getBuildUrl() {
+        return buildUrl;
     }
 
     public String getBranch() {

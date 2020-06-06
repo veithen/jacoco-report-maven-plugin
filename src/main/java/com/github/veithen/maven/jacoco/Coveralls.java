@@ -108,7 +108,7 @@ final class Coveralls implements CoverageService {
         }
         JsonObject jsonFile = Json.createObjectBuilder()
                 .add("service_name", serviceMap.get(ciContext.getService()))
-                .add("service_job_id", ciContext.getJobId())
+                .add("service_job_id", ciContext.getBuildRunId())
                 .add("source_files", sourceFilesBuilder.build())
                 .build();
         FormDataMultiPart multipart = new FormDataMultiPart();
