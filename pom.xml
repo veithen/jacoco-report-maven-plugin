@@ -276,6 +276,11 @@
                                 <TRAVIS_REPO_SLUG>dummy/test</TRAVIS_REPO_SLUG>
                                 <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
                                 <TRAVIS_COMMIT>4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33</TRAVIS_COMMIT>
+                                <GITHUB_ACTION/>
+                                <GITHUB_REPOSITORY/>
+                                <GITHUB_RUN_ID/>
+                                <GITHUB_REF/>
+                                <GITHUB_SHA/>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -296,6 +301,11 @@
                                 <TRAVIS_REPO_SLUG>dummy/foobar</TRAVIS_REPO_SLUG>
                                 <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
                                 <TRAVIS_COMMIT>c56d6502b9eb6dcde8aa334d4f3aba8752b5147f</TRAVIS_COMMIT>
+                                <GITHUB_ACTION/>
+                                <GITHUB_REPOSITORY/>
+                                <GITHUB_RUN_ID/>
+                                <GITHUB_REF/>
+                                <GITHUB_SHA/>
                             </environmentVariables>
                         </configuration>
                     </execution>
