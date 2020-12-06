@@ -8,3 +8,11 @@ updates:
       # We are not ready for Jakarta EE 9 yet.
       - dependency-name: "org.glassfish.jersey:jersey-bom"
         versions: ">= 3.0"
+  - package-ecosystem: "maven"
+    directory: "/src/it/test1"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "maven"
+    directory: "/src/it/unconfigured"
+    schedule:
+      interval: "daily"
