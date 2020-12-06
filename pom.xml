@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.github.veithen</groupId>
         <artifactId>parent</artifactId>
-        <version>23-SNAPSHOT</version>
+        <version>23</version>
     </parent>
 
     <groupId>com.github.veithen.maven</groupId>
@@ -54,16 +54,6 @@
         <javaVersion>1.8</javaVersion>
         <maven.version>3.0</maven.version>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>sonatype-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-    </repositories>
 
     <dependencyManagement>
         <dependencies>
@@ -170,6 +160,16 @@
         </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
     <build>
         <resources>
             <resource>
@@ -245,7 +245,7 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.github.veithen.invoker</groupId>
+                <groupId>com.github.veithen.maven</groupId>
                 <artifactId>resolver-proxy-maven-plugin</artifactId>
                 <executions>
                     <execution>
