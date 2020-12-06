@@ -4,3 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      # We are not ready for Jakarta EE 9 yet.
+      - dependency-name: "org.glassfish.jersey:jersey-bom"
+        versions: ">= 3.0"
