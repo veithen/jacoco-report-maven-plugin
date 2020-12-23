@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Coveralls implements CoverageService {
     private final WebTarget target;
-    private final Map<String,String> serviceMap;
+    private final Map<String, String> serviceMap;
 
     Coveralls(WebTarget target) {
         this.target = target;
@@ -60,14 +60,17 @@ final class Coveralls implements CoverageService {
             return false;
         }
         try {
-            withRetry(() -> target.path("github/{user}/{repo}.json")
-                    .resolveTemplate("user", ciContext.getUser())
-                    .resolveTemplate("repo", ciContext.getRepository())
-                    .request()
-                    .accept(MediaType.APPLICATION_JSON_TYPE)
-                    // For newly enabled repositories, the API returns "null", i.e. this needs to
-                    // be JsonValue, not JsonObject.
-                    .get(JsonValue.class));
+            withRetry(
+                    () ->
+                            target.path("github/{user}/{repo}.json")
+                                    .resolveTemplate("user", ciContext.getUser())
+                                    .resolveTemplate("repo", ciContext.getRepository())
+                                    .request()
+                                    .accept(MediaType.APPLICATION_JSON_TYPE)
+                                    // For newly enabled repositories, the API returns "null", i.e.
+                                    // this needs to
+                                    // be JsonValue, not JsonObject.
+                                    .get(JsonValue.class));
             return true;
         } catch (NotFoundException ex) {
             return false;
@@ -75,7 +78,8 @@ final class Coveralls implements CoverageService {
     }
 
     @Override
-    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
+            throws MojoFailureException {
         JsonArrayBuilder sourceFilesBuilder = Json.createArrayBuilder();
         for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
@@ -84,10 +88,12 @@ final class Coveralls implements CoverageService {
                     continue;
                 }
                 JsonArrayBuilder coverageBuilder = Json.createArrayBuilder();
-                for (int i=1; i<sourceFileCoverage.getFirstLine(); i++) {
+                for (int i = 1; i < sourceFileCoverage.getFirstLine(); i++) {
                     coverageBuilder.add(JsonValue.NULL);
                 }
-                for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
+                for (int i = sourceFileCoverage.getFirstLine();
+                        i <= sourceFileCoverage.getLastLine();
+                        i++) {
                     switch (sourceFileCoverage.getLine(i).getStatus()) {
                         case ICounter.EMPTY:
                             coverageBuilder.add(JsonValue.NULL);
@@ -99,23 +105,28 @@ final class Coveralls implements CoverageService {
                             coverageBuilder.add(1);
                     }
                 }
-                sourceFilesBuilder.add(Json.createObjectBuilder()
-                        .add("name", source.getPathRelativeToRepositoryRoot())
-                        .add("source_digest", source.digest())
-                        .add("coverage", coverageBuilder.build())
-                        .build());
+                sourceFilesBuilder.add(
+                        Json.createObjectBuilder()
+                                .add("name", source.getPathRelativeToRepositoryRoot())
+                                .add("source_digest", source.digest())
+                                .add("coverage", coverageBuilder.build())
+                                .build());
             }
         }
-        JsonObject jsonFile = Json.createObjectBuilder()
-                .add("service_name", serviceMap.get(ciContext.getService()))
-                .add("service_job_id", ciContext.getBuildRunId())
-                .add("source_files", sourceFilesBuilder.build())
-                .build();
+        JsonObject jsonFile =
+                Json.createObjectBuilder()
+                        .add("service_name", serviceMap.get(ciContext.getService()))
+                        .add("service_job_id", ciContext.getBuildRunId())
+                        .add("source_files", sourceFilesBuilder.build())
+                        .build();
         FormDataMultiPart multipart = new FormDataMultiPart();
-        multipart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("json_file").fileName("coverage.json").build(),
-                jsonFile,
-                MediaType.APPLICATION_JSON_TYPE));
+        multipart.bodyPart(
+                new FormDataBodyPart(
+                        FormDataContentDisposition.name("json_file")
+                                .fileName("coverage.json")
+                                .build(),
+                        jsonFile,
+                        MediaType.APPLICATION_JSON_TYPE));
         return target.path("api/v1/jobs")
                 .request()
                 .post(Entity.entity(multipart, multipart.getMediaType()), JsonObject.class)

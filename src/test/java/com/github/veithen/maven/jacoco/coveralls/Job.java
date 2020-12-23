@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,7 +44,9 @@ public class Job {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String post(@HeaderParam(HttpHeaders.USER_AGENT) String userAgent, FormDataMultiPart multipart) throws Exception {
+    public String post(
+            @HeaderParam(HttpHeaders.USER_AGENT) String userAgent, FormDataMultiPart multipart)
+            throws Exception {
         assertThat(userAgent).startsWith("com.github.veithen.maven:jacoco-report-maven-plugin/");
         FormDataBodyPart jsonFilePart = multipart.getField("json_file");
         assertThat(jsonFilePart).isNotNull();
@@ -56,10 +58,11 @@ public class Job {
         JsonArray sourceFiles = jsonFile.getJsonArray("source_files");
         assertThat(sourceFiles).hasSize(1);
         JsonObject sourceFile = sourceFiles.getJsonObject(0);
-        assertThat(sourceFile.getString("name", null)).isEqualTo("target/its/test1/bundle/src/main/java/test/HelloService.java");
+        assertThat(sourceFile.getString("name", null))
+                .isEqualTo("target/its/test1/bundle/src/main/java/test/HelloService.java");
         JsonArray coverage = sourceFile.getJsonArray("coverage");
         int coveredLines = 0;
-        for (int i=0; i<coverage.size(); i++) {
+        for (int i = 0; i < coverage.size(); i++) {
             coveredLines += coverage.getInt(i, 0);
         }
         assertThat(coveredLines).isEqualTo(2);

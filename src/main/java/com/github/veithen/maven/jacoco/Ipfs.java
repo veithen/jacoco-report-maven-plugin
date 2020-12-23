@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,45 +65,57 @@ final class Ipfs implements CoverageService {
                 throw ex;
             }
         } catch (BadRequestException ex) {
-            // On Jenkins, port 5001 can be taken by the slave agent and the request fails with status 400.
+            // On Jenkins, port 5001 can be taken by the slave agent and the request fails with
+            // status 400.
             return false;
         }
     }
 
     @Override
-    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) throws MojoFailureException {
+    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
+            throws MojoFailureException {
         FormDataMultiPart multipart = new FormDataMultiPart();
-        multipart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName(ROOT_DIR).build(),
-                new byte[0],
-                new MediaType("application", "x-directory")));
+        multipart.bodyPart(
+                new FormDataBodyPart(
+                        FormDataContentDisposition.name("file").fileName(ROOT_DIR).build(),
+                        new byte[0],
+                        new MediaType("application", "x-directory")));
         HTMLFormatter htmlFormatter = new HTMLFormatter();
         htmlFormatter.setOutputEncoding("utf-8");
         htmlFormatter.setLocale(Locale.ENGLISH);
         try {
-            coverageContext.visit(htmlFormatter.createVisitor(new MultiReportOutput((path, content) -> {
-                multipart.bodyPart(new FormDataBodyPart(
-                        FormDataContentDisposition.name("file").fileName(ROOT_DIR + "/" + path).build(),
-                        content,
-                        MediaType.APPLICATION_OCTET_STREAM_TYPE));
-            })));
+            coverageContext.visit(
+                    htmlFormatter.createVisitor(
+                            new MultiReportOutput(
+                                    (path, content) -> {
+                                        multipart.bodyPart(
+                                                new FormDataBodyPart(
+                                                        FormDataContentDisposition.name("file")
+                                                                .fileName(ROOT_DIR + "/" + path)
+                                                                .build(),
+                                                        content,
+                                                        MediaType.APPLICATION_OCTET_STREAM_TYPE));
+                                    })));
         } catch (IOException ex) {
-            throw new MojoFailureException(String.format("Failed to generate coverage report: %s", ex.getMessage()), ex);
+            throw new MojoFailureException(
+                    String.format("Failed to generate coverage report: %s", ex.getMessage()), ex);
         }
         // The response isn't proper JSON. It's a sequence of JSON objects, one per line.
-        String response = target.path("api/v0/add")
-                // https://stackoverflow.com/questions/37580093/ipfs-add-returns-2-jsons
-                .queryParam("progress", "false")
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                // https://github.com/ipfs/java-ipfs-http-client/commit/2d1ffbcf6643e460ee1ba9581358f4735e954f09
-                .header("Expect", "100-continue")
-                .post(Entity.entity(multipart, multipart.getMediaType()), String.class);
+        String response =
+                target.path("api/v0/add")
+                        // https://stackoverflow.com/questions/37580093/ipfs-add-returns-2-jsons
+                        .queryParam("progress", "false")
+                        .request(MediaType.APPLICATION_JSON_TYPE)
+                        // https://github.com/ipfs/java-ipfs-http-client/commit/2d1ffbcf6643e460ee1ba9581358f4735e954f09
+                        .header("Expect", "100-continue")
+                        .post(Entity.entity(multipart, multipart.getMediaType()), String.class);
         try (BufferedReader reader = new BufferedReader(new StringReader(response))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 JsonObject object = Json.createReader(new StringReader(line)).readObject();
                 if (object.getString("Name").equals(ROOT_DIR)) {
-                    return String.format("https://ipfs.io/ipfs/%s/index.html", object.getString("Hash"));
+                    return String.format(
+                            "https://ipfs.io/ipfs/%s/index.html", object.getString("Hash"));
                 }
             }
         } catch (IOException ex) {

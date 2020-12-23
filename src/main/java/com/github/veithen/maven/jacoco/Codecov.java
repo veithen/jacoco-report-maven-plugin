@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 
 final class Codecov implements CoverageService {
     private final WebTarget target;
-    private final Map<String,String> serviceMap;
+    private final Map<String, String> serviceMap;
 
     Codecov(WebTarget target) {
         this.target = target;
@@ -56,12 +56,14 @@ final class Codecov implements CoverageService {
             return false;
         }
         try {
-            withRetry(() -> target.path("api/gh/{user}/{repo}")
-                    .resolveTemplate("user", ciContext.getUser())
-                    .resolveTemplate("repo", ciContext.getRepository())
-                    .request()
-                    .accept(MediaType.APPLICATION_JSON_TYPE)
-                    .get(JsonObject.class));
+            withRetry(
+                    () ->
+                            target.path("api/gh/{user}/{repo}")
+                                    .resolveTemplate("user", ciContext.getUser())
+                                    .resolveTemplate("repo", ciContext.getRepository())
+                                    .request()
+                                    .accept(MediaType.APPLICATION_JSON_TYPE)
+                                    .get(JsonObject.class));
             return true;
         } catch (NotFoundException ex) {
             return false;
@@ -80,7 +82,9 @@ final class Codecov implements CoverageService {
                     continue;
                 }
                 JsonObjectBuilder coverageBuilder = Json.createObjectBuilder();
-                for (int i=sourceFileCoverage.getFirstLine(); i<=sourceFileCoverage.getLastLine(); i++) {
+                for (int i = sourceFileCoverage.getFirstLine();
+                        i <= sourceFileCoverage.getLastLine();
+                        i++) {
                     ILine line = sourceFileCoverage.getLine(i);
                     if (line.getStatus() == ICounter.EMPTY) {
                         continue;
@@ -88,7 +92,11 @@ final class Codecov implements CoverageService {
                     ICounter branchCounter = line.getBranchCounter();
                     String value;
                     if (branchCounter.getTotalCount() > 0) {
-                        value = String.format("%s/%s", branchCounter.getCoveredCount(), branchCounter.getTotalCount());
+                        value =
+                                String.format(
+                                        "%s/%s",
+                                        branchCounter.getCoveredCount(),
+                                        branchCounter.getTotalCount());
                     } else if (line.getStatus() == ICounter.NOT_COVERED) {
                         value = "0";
                     } else {
@@ -96,10 +104,12 @@ final class Codecov implements CoverageService {
                     }
                     coverageBuilder.add(String.valueOf(i), value);
                 }
-                sourceFilesBuilder.add(source.getPathRelativeToRepositoryRoot(), coverageBuilder.build());
+                sourceFilesBuilder.add(
+                        source.getPathRelativeToRepositoryRoot(), coverageBuilder.build());
             }
         }
-        JsonObject report = Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
+        JsonObject report =
+                Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
         target.path("upload/v2")
                 .queryParam("service", serviceMap.get(ciContext.getService()))
                 .queryParam("slug", ciContext.getRepoSlug())

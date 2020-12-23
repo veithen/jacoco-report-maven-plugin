@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,25 +52,25 @@ import org.jacoco.core.tools.ExecFileLoader;
 
 import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
 
-@Mojo(name="process", defaultPhase=LifecyclePhase.POST_INTEGRATION_TEST, threadSafe=true)
+@Mojo(name = "process", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public final class ProcessMojo extends AggregatingMojo<CoverageData> {
-    @Parameter(defaultValue="${project.build.directory}/jacoco.exec", required=true)
+    @Parameter(defaultValue = "${project.build.directory}/jacoco.exec", required = true)
     private File dataFile;
 
-    @Parameter(defaultValue="true")
+    @Parameter(defaultValue = "true")
     private boolean includeClasses;
 
-    @Parameter(defaultValue="https://coveralls.io", required=true)
+    @Parameter(defaultValue = "https://coveralls.io", required = true)
     private String coverallsApiEndpoint;
 
-    @Parameter(defaultValue="https://codecov.io", required=true)
+    @Parameter(defaultValue = "https://codecov.io", required = true)
     private String codecovApiEndpoint;
 
-    @Parameter(defaultValue="http://localhost:5001", required=true)
+    @Parameter(defaultValue = "http://localhost:5001", required = true)
     private String ipfsApiEndpoint;
 
-    @Component(role=ContinuousIntegrationContextFactory.class)
-    private Map<String,ContinuousIntegrationContextFactory> continuousIntegrationContextFactories;
+    @Component(role = ContinuousIntegrationContextFactory.class)
+    private Map<String, ContinuousIntegrationContextFactory> continuousIntegrationContextFactories;
 
     public ProcessMojo() {
         super(CoverageData.class);
@@ -127,7 +127,8 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         while (!new File(rootDir, ".git").exists()) {
             rootDir = rootDir.getParentFile();
             if (rootDir == null) {
-                throw new IllegalStateException("Root directory not found; are we running from a Git clone?");
+                throw new IllegalStateException(
+                        "Root directory not found; are we running from a Git clone?");
             }
         }
         return rootDir;
@@ -137,7 +138,8 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         return stream::iterator;
     }
 
-    static MojoFailureException processException(String serviceName, WebApplicationException exception) {
+    static MojoFailureException processException(
+            String serviceName, WebApplicationException exception) {
         String message = null;
         try {
             JsonObject entity = exception.getResponse().readEntity(JsonObject.class);
@@ -150,11 +152,13 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         if (message == null) {
             message = exception.getMessage();
         }
-        return new MojoFailureException(String.format("Failed to send request to %s: %s", serviceName, message), exception);
+        return new MojoFailureException(
+                String.format("Failed to send request to %s: %s", serviceName, message), exception);
     }
 
     @Override
-    protected void doAggregate(List<CoverageData> results) throws MojoExecutionException, MojoFailureException {
+    protected void doAggregate(List<CoverageData> results)
+            throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
         if (results.stream().map(CoverageData::getDataFile).allMatch(Objects::isNull)) {
             log.info("No coverage data collected; skipping execution.");
@@ -165,7 +169,8 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             return;
         }
         ContinuousIntegrationContext ciContext = null;
-        for (ContinuousIntegrationContextFactory factory : continuousIntegrationContextFactories.values()) {
+        for (ContinuousIntegrationContextFactory factory :
+                continuousIntegrationContextFactories.values()) {
             ciContext = factory.createContext(System.getenv());
             if (ciContext != null) {
                 break;
@@ -181,12 +186,13 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             log.info("  Build run ID: " + ciContext.getBuildRunId());
             log.info("  Build URL: " + ciContext.getBuildUrl());
         }
-        Client client = ClientBuilder.newBuilder()
-                .register(MultiPartFeature.class)
-                .register(UserAgentFeature.class)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(1, TimeUnit.MINUTES)
-                .build();
+        Client client =
+                ClientBuilder.newBuilder()
+                        .register(MultiPartFeature.class)
+                        .register(UserAgentFeature.class)
+                        .connectTimeout(10, TimeUnit.SECONDS)
+                        .readTimeout(1, TimeUnit.MINUTES)
+                        .build();
         List<CoverageService> coverageServices = new ArrayList<>();
         coverageServices.add(new Coveralls(client.target(coverallsApiEndpoint)));
         coverageServices.add(new Codecov(client.target(codecovApiEndpoint)));
@@ -203,30 +209,40 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             return;
         }
         ExecFileLoader loader = new ExecFileLoader();
-        for (File dataFile : toIterable(results.stream().map(CoverageData::getDataFile).filter(Objects::nonNull))) {
+        for (File dataFile :
+                toIterable(
+                        results.stream().map(CoverageData::getDataFile).filter(Objects::nonNull))) {
             try {
                 loader.load(dataFile);
             } catch (IOException ex) {
-                throw new MojoExecutionException(String.format("Failed to load exec file %s: %s", dataFile, ex.getMessage()), ex);
+                throw new MojoExecutionException(
+                        String.format("Failed to load exec file %s: %s", dataFile, ex.getMessage()),
+                        ex);
             }
         }
         CoverageBuilder builder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), builder);
-        for (File classes : toIterable(results.stream().map(CoverageData::getClasses).filter(Objects::nonNull))) {
+        for (File classes :
+                toIterable(
+                        results.stream().map(CoverageData::getClasses).filter(Objects::nonNull))) {
             try {
                 analyzer.analyzeAll(classes);
             } catch (IOException ex) {
-                throw new MojoExecutionException(String.format("Failed to analyze %s: %s", classes, ex.getMessage()), ex);
+                throw new MojoExecutionException(
+                        String.format("Failed to analyze %s: %s", classes, ex.getMessage()), ex);
             }
         }
         Map<String, File> sourceFiles = new HashMap<>();
         results.stream().map(CoverageData::getSources).forEach(sourceFiles::putAll);
         IBundleCoverage bundle = builder.getBundle("Coverage Report");
-        CoverageContext coverageContext = new CoverageContext(
-                loader, bundle, sourceFiles,
-                // Only try to find the root directory if we need to, so that the plugin works with
-                // Subversion and IPFS.
-                new Lazy<File>(this::findRootDir));
+        CoverageContext coverageContext =
+                new CoverageContext(
+                        loader,
+                        bundle,
+                        sourceFiles,
+                        // Only try to find the root directory if we need to, so that the plugin
+                        // works with Subversion and IPFS.
+                        new Lazy<File>(this::findRootDir));
         for (CoverageService service : coverageServices) {
             String link;
             try {
@@ -234,7 +250,10 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             } catch (WebApplicationException ex) {
                 throw processException(service.getName(), ex);
             }
-            log.info(String.format("Successfully uploaded coverage data to %s: %s", service.getName(), link));
+            log.info(
+                    String.format(
+                            "Successfully uploaded coverage data to %s: %s",
+                            service.getName(), link));
         }
     }
 }
