@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: "daily"
     ignore:
+      - dependency-name: "jakarta.activation:jakarta.activation-api"
+        versions: ">= 1.2.2"
+      - dependency-name: "jakarta.xml.bind:jakarta.xml.bind-api"
+        versions: ">= 3.0"
       # We are not ready for Jakarta EE 9 yet.
       - dependency-name: "org.glassfish.jersey:jersey-bom"
         versions: ">= 3.0"
