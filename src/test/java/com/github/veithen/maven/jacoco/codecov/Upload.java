@@ -21,20 +21,25 @@ package com.github.veithen.maven.jacoco.codecov;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 @Path("upload/v2")
 public class Upload {
+    @Context ServletContext servletContext;
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
@@ -55,7 +60,11 @@ public class Upload {
         assertThat(buildUrl).isEqualTo("https://travis-ci.org/dummy/test/jobs/123456");
         assertThat(commit).isEqualTo("4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33");
         assertThat(branch).isEqualTo("master");
-        try (OutputStream out = new FileOutputStream("target/codecov.json")) {
+        try (OutputStream out =
+                new FileOutputStream(
+                        new File(
+                                servletContext.getInitParameter("outputDirectory"),
+                                "codecov.json"))) {
             Json.createWriter(out).write(body);
         }
         return "";

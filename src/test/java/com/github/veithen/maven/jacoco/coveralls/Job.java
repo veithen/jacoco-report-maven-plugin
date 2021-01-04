@@ -21,17 +21,20 @@ package com.github.veithen.maven.jacoco.coveralls;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
@@ -41,6 +44,8 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 @Path("api/v1/jobs")
 public class Job {
+    @Context ServletContext servletContext;
+
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
@@ -66,7 +71,11 @@ public class Job {
             coveredLines += coverage.getInt(i, 0);
         }
         assertThat(coveredLines).isEqualTo(2);
-        try (OutputStream out = new FileOutputStream("target/coveralls.json")) {
+        try (OutputStream out =
+                new FileOutputStream(
+                        new File(
+                                servletContext.getInitParameter("outputDirectory"),
+                                "coveralls.json"))) {
             Json.createWriter(out).write(jsonFile);
         }
         return "{\"message\":\"Job #44.1\",\"url\":\"https://coveralls.io/jobs/42722376\"}";
