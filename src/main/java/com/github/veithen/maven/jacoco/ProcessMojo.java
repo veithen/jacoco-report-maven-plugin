@@ -36,6 +36,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
+import org.apache.cxf.common.logging.Slf4jLogger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -44,6 +45,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
@@ -190,6 +192,7 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
                 ClientBuilder.newBuilder()
                         .register(MultiPartFeature.class)
                         .register(UserAgentFeature.class)
+                        .register(new LoggingFeature(new Slf4jLogger("jersey", null)))
                         .connectTimeout(10, TimeUnit.SECONDS)
                         .readTimeout(1, TimeUnit.MINUTES)
                         .build();
