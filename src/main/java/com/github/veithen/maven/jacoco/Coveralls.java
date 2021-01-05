@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
@@ -113,12 +114,17 @@ final class Coveralls implements CoverageService {
                                 .build());
             }
         }
-        JsonObject jsonFile =
+        JsonObjectBuilder jsonFileBuilder =
                 Json.createObjectBuilder()
-                        .add("service_name", serviceMap.get(ciContext.getService()))
-                        .add("service_job_id", ciContext.getBuildRunId())
-                        .add("source_files", sourceFilesBuilder.build())
-                        .build();
+                        .add("service_name", serviceMap.get(ciContext.getService()));
+        if (ciContext.getBuildId() != null) {
+            jsonFileBuilder.add("service_number", ciContext.getBuildId());
+        }
+        if (ciContext.getBuildRunId() != null) {
+            jsonFileBuilder.add("service_job_id", ciContext.getBuildRunId());
+        }
+        jsonFileBuilder.add("source_files", sourceFilesBuilder.build());
+        JsonObject jsonFile = jsonFileBuilder.build();
         FormDataMultiPart multipart = new FormDataMultiPart();
         multipart.bodyPart(
                 new FormDataBodyPart(
