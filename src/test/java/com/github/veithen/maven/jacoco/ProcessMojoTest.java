@@ -31,7 +31,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.apache.maven.plugin.MojoFailureException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ProcessMojoTest {
     @Test

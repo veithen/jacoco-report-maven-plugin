@@ -23,7 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.jacoco.core.data.SessionInfo;
 import org.jacoco.core.runtime.AbstractRuntime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CoverageContextTest {
     @Test
