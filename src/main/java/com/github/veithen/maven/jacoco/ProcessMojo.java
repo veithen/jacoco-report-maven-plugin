@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -62,17 +63,13 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue = "true")
     private boolean includeClasses;
 
-    @Parameter(defaultValue = "https://coveralls.io", required = true)
-    private String coverallsApiEndpoint;
-
-    @Parameter(defaultValue = "https://codecov.io", required = true)
-    private String codecovApiEndpoint;
-
-    @Parameter(defaultValue = "http://localhost:5001", required = true)
-    private String ipfsApiEndpoint;
-
     @Component(role = ContinuousIntegrationContextFactory.class)
     private Map<String, ContinuousIntegrationContextFactory> continuousIntegrationContextFactories;
+
+    @Component(role = CoverageServiceFactory.class)
+    private Map<String, CoverageServiceFactory> coverageServiceFactories;
+
+    @Parameter private Map<String, String> apiEndpoints;
 
     public ProcessMojo() {
         super(CoverageData.class);
@@ -197,9 +194,17 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
                         .readTimeout(1, TimeUnit.MINUTES)
                         .build();
         List<CoverageService> coverageServices = new ArrayList<>();
-        coverageServices.add(new Coveralls(client.target(coverallsApiEndpoint)));
-        coverageServices.add(new Codecov(client.target(codecovApiEndpoint)));
-        coverageServices.add(new Ipfs(client.target(ipfsApiEndpoint)));
+        for (Map.Entry<String, CoverageServiceFactory> entry :
+                coverageServiceFactories.entrySet()) {
+            coverageServices.add(
+                    entry.getValue()
+                            .newInstance(
+                                    client,
+                                    apiEndpoints == null
+                                            ? Optional.empty()
+                                            : Optional.ofNullable(
+                                                    apiEndpoints.get(entry.getKey()))));
+        }
         for (Iterator<CoverageService> it = coverageServices.iterator(); it.hasNext(); ) {
             CoverageService service = it.next();
             if (!service.isEnabled(ciContext)) {

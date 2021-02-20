@@ -36,7 +36,7 @@ import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.IReportVisitor;
 import org.jacoco.report.InputStreamSourceFileLocator;
 
-final class CoverageContext {
+public final class CoverageContext {
     private static final Pattern autoSessionIdPattern = Pattern.compile(".*-([0-9a-f]{1,8})");
 
     private final ExecFileLoader loader;
@@ -55,7 +55,7 @@ final class CoverageContext {
         this.rootDirSupplier = rootDirSupplier;
     }
 
-    IBundleCoverage getBundle() {
+    public IBundleCoverage getBundle() {
         return bundle;
     }
 
@@ -71,7 +71,7 @@ final class CoverageContext {
         }
     }
 
-    void visit(IReportVisitor visitor) throws IOException {
+    public void visit(IReportVisitor visitor) throws IOException {
         visitor.visitInfo(
                 loader.getSessionInfoStore().getInfos().stream()
                         .map(CoverageContext::anonymize)
@@ -90,7 +90,7 @@ final class CoverageContext {
         visitor.visitEnd();
     }
 
-    Source lookupSource(ISourceFileCoverage sourceFileCoverage) {
+    public Source lookupSource(ISourceFileCoverage sourceFileCoverage) {
         File sourceFile =
                 sourceFiles.get(
                         sourceFileCoverage.getPackageName().replace('.', '/')

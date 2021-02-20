@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.ipfs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,6 +38,10 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.report.html.HTMLFormatter;
+
+import com.github.veithen.maven.jacoco.ContinuousIntegrationContext;
+import com.github.veithen.maven.jacoco.CoverageContext;
+import com.github.veithen.maven.jacoco.CoverageService;
 
 final class Ipfs implements CoverageService {
     private static final String ROOT_DIR = "report";

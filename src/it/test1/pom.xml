@@ -71,9 +71,11 @@
                             <goal>process</goal>
                         </goals>
                         <configuration>
-                            <coverallsApiEndpoint>http://localhost:@httpPort@/coveralls</coverallsApiEndpoint>
-                            <codecovApiEndpoint>http://localhost:@httpPort@/codecov</codecovApiEndpoint>
-                            <ipfsApiEndpoint>http://localhost:@httpPort@/ipfs</ipfsApiEndpoint>
+                            <apiEndpoints>
+                                <coveralls>http://localhost:@httpPort@/coveralls</coveralls>
+                                <codecov>http://localhost:@httpPort@/codecov</codecov>
+                                <ipfs>http://localhost:@httpPort@/ipfs</ipfs>
+                            </apiEndpoints>
                         </configuration>
                     </execution>
                 </executions>

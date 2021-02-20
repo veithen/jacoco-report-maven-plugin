@@ -17,26 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.codecov;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.function.BiConsumer;
+import java.util.Optional;
 
-import org.jacoco.report.IMultiReportOutput;
+import javax.ws.rs.client.Client;
 
-final class MultiReportOutput implements IMultiReportOutput {
-    private final BiConsumer<String, byte[]> consumer;
+import org.codehaus.plexus.component.annotations.Component;
 
-    MultiReportOutput(BiConsumer<String, byte[]> consumer) {
-        this.consumer = consumer;
-    }
+import com.github.veithen.maven.jacoco.CoverageService;
+import com.github.veithen.maven.jacoco.CoverageServiceFactory;
 
+@Component(role = CoverageServiceFactory.class, hint = "codecov")
+public final class CodecovFactory implements CoverageServiceFactory {
     @Override
-    public OutputStream createFile(String path) throws IOException {
-        return new ReportOutputStream(consumer, path);
+    public CoverageService newInstance(Client client, Optional<String> apiEndpoint) {
+        return new Codecov(client.target(apiEndpoint.orElse("https://codecov.io")));
     }
-
-    @Override
-    public void close() throws IOException {}
 }

@@ -17,15 +17,26 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.ipfs;
 
-import org.apache.maven.plugin.MojoFailureException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.function.BiConsumer;
 
-public interface CoverageService {
-    String getName();
+import org.jacoco.report.IMultiReportOutput;
 
-    boolean isEnabled(ContinuousIntegrationContext ciContext);
+final class MultiReportOutput implements IMultiReportOutput {
+    private final BiConsumer<String, byte[]> consumer;
 
-    String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
-            throws MojoFailureException;
+    MultiReportOutput(BiConsumer<String, byte[]> consumer) {
+        this.consumer = consumer;
+    }
+
+    @Override
+    public OutputStream createFile(String path) throws IOException {
+        return new ReportOutputStream(consumer, path);
+    }
+
+    @Override
+    public void close() throws IOException {}
 }

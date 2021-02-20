@@ -28,10 +28,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-final class ServiceMap {
+public final class ServiceMap {
     private ServiceMap() {}
 
-    static Map<String, String> loadServiceMap(String name) {
+    public static Map<String, String> loadServiceMap(String name) {
         Enumeration<URL> urls;
         try {
             urls = ServiceMap.class.getClassLoader().getResources(name);

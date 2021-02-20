@@ -24,10 +24,10 @@ import java.util.function.Supplier;
 
 import javax.ws.rs.ProcessingException;
 
-final class Retry {
+public final class Retry {
     private Retry() {}
 
-    static <T> T withRetry(Supplier<T> retryable) {
+    public static <T> T withRetry(Supplier<T> retryable) {
         int numAttempts = 0;
         long delay = 500;
         while (true) {

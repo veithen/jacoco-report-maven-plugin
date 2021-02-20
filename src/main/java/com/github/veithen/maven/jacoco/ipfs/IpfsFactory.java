@@ -17,15 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.ipfs;
 
-import org.apache.maven.plugin.MojoFailureException;
+import java.util.Optional;
 
-public interface CoverageService {
-    String getName();
+import javax.ws.rs.client.Client;
 
-    boolean isEnabled(ContinuousIntegrationContext ciContext);
+import org.codehaus.plexus.component.annotations.Component;
 
-    String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
-            throws MojoFailureException;
+import com.github.veithen.maven.jacoco.CoverageService;
+import com.github.veithen.maven.jacoco.CoverageServiceFactory;
+
+@Component(role = CoverageServiceFactory.class, hint = "ipfs")
+public final class IpfsFactory implements CoverageServiceFactory {
+    @Override
+    public CoverageService newInstance(Client client, Optional<String> apiEndpoint) {
+        return new Ipfs(client.target(apiEndpoint.orElse("http://localhost:5001")));
+    }
 }

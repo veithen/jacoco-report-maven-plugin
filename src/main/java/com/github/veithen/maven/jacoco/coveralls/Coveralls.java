@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.coveralls;
 
 import static com.github.veithen.maven.jacoco.Retry.withRetry;
 
@@ -40,6 +40,12 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
+
+import com.github.veithen.maven.jacoco.ContinuousIntegrationContext;
+import com.github.veithen.maven.jacoco.CoverageContext;
+import com.github.veithen.maven.jacoco.CoverageService;
+import com.github.veithen.maven.jacoco.ServiceMap;
+import com.github.veithen.maven.jacoco.Source;
 
 final class Coveralls implements CoverageService {
     private final WebTarget target;

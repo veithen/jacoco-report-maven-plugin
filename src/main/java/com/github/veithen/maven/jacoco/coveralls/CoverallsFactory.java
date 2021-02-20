@@ -17,23 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.coveralls;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.function.BiConsumer;
+import java.util.Optional;
 
-final class ReportOutputStream extends ByteArrayOutputStream {
-    private final BiConsumer<String, byte[]> consumer;
-    private final String path;
+import javax.ws.rs.client.Client;
 
-    ReportOutputStream(BiConsumer<String, byte[]> consumer, String path) {
-        this.consumer = consumer;
-        this.path = path;
-    }
+import org.codehaus.plexus.component.annotations.Component;
 
+import com.github.veithen.maven.jacoco.CoverageService;
+import com.github.veithen.maven.jacoco.CoverageServiceFactory;
+
+@Component(role = CoverageServiceFactory.class, hint = "coveralls")
+public final class CoverallsFactory implements CoverageServiceFactory {
     @Override
-    public void close() throws IOException {
-        consumer.accept(path, toByteArray());
+    public CoverageService newInstance(Client client, Optional<String> apiEndpoint) {
+        return new Coveralls(client.target(apiEndpoint.orElse("https://coveralls.io")));
     }
 }

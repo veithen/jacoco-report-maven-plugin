@@ -17,15 +17,23 @@
  * limitations under the License.
  * #L%
  */
-package com.github.veithen.maven.jacoco;
+package com.github.veithen.maven.jacoco.ipfs;
 
-import org.apache.maven.plugin.MojoFailureException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.function.BiConsumer;
 
-public interface CoverageService {
-    String getName();
+final class ReportOutputStream extends ByteArrayOutputStream {
+    private final BiConsumer<String, byte[]> consumer;
+    private final String path;
 
-    boolean isEnabled(ContinuousIntegrationContext ciContext);
+    ReportOutputStream(BiConsumer<String, byte[]> consumer, String path) {
+        this.consumer = consumer;
+        this.path = path;
+    }
 
-    String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
-            throws MojoFailureException;
+    @Override
+    public void close() throws IOException {
+        consumer.accept(path, toByteArray());
+    }
 }

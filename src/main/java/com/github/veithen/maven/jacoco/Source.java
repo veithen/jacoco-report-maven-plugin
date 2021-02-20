@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.maven.plugin.MojoFailureException;
 
-final class Source {
+public final class Source {
     private final File file;
     private final Supplier<File> rootDirSupplier;
 
@@ -40,7 +40,7 @@ final class Source {
         this.rootDirSupplier = rootDir;
     }
 
-    String getPathRelativeToRepositoryRoot() {
+    public String getPathRelativeToRepositoryRoot() {
         File rootDir = rootDirSupplier.get();
         File file = this.file;
         Deque<String> components = new LinkedList<>();
@@ -55,7 +55,7 @@ final class Source {
         return String.join("/", components);
     }
 
-    String digest() throws MojoFailureException {
+    public String digest() throws MojoFailureException {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("MD5");

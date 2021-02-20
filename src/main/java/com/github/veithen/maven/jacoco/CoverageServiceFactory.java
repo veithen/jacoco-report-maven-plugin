@@ -19,13 +19,10 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import org.apache.maven.plugin.MojoFailureException;
+import java.util.Optional;
 
-public interface CoverageService {
-    String getName();
+import javax.ws.rs.client.Client;
 
-    boolean isEnabled(ContinuousIntegrationContext ciContext);
-
-    String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext)
-            throws MojoFailureException;
+public interface CoverageServiceFactory {
+    CoverageService newInstance(Client client, Optional<String> apiEndpoint);
 }
