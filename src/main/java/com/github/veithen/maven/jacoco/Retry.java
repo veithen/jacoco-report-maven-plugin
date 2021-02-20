@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ServerErrorException;
 
 public final class Retry {
     private Retry() {}
@@ -34,8 +35,8 @@ public final class Retry {
             numAttempts++;
             try {
                 return retryable.get();
-            } catch (ProcessingException ex) {
-                if (ex.getCause() instanceof IOException && numAttempts < 4) {
+            } catch (RuntimeException ex) {
+                if (isRetriable(ex) && numAttempts < 4) {
                     try {
                         Thread.sleep(delay);
                     } catch (InterruptedException ex2) {
@@ -47,5 +48,10 @@ public final class Retry {
                 throw ex;
             }
         }
+    }
+
+    private static boolean isRetriable(RuntimeException ex) {
+        return (ex instanceof ProcessingException && ex.getCause() instanceof IOException)
+                || ex instanceof ServerErrorException;
     }
 }
