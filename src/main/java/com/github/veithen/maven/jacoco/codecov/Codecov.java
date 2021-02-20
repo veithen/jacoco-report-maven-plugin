@@ -116,22 +116,28 @@ final class Codecov implements CoverageService {
         }
         JsonObject report =
                 Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
-        target.path("upload/v2")
-                .queryParam("service", serviceMap.get(ciContext.getService()))
-                .queryParam("slug", ciContext.getRepoSlug())
-                .queryParam("job", ciContext.getBuildRunId())
-                .queryParam("build", ciContext.getBuildId())
-                .queryParam("build_url", ciContext.getBuildUrl())
-                .queryParam("branch", ciContext.getBranch())
-                .queryParam("commit", ciContext.getCommit())
-                .queryParam("pr", ciContext.getPullRequest())
-                .request()
-                .post(Entity.entity(report, MediaType.APPLICATION_JSON_TYPE), String.class);
-        return target.path("gh/{user}/{repo}/tree/{commit}")
-                .resolveTemplate("user", ciContext.getUser())
-                .resolveTemplate("repo", ciContext.getRepository())
-                .resolveTemplate("commit", ciContext.getCommit())
-                .getUri()
-                .toString();
+        withRetry(
+                () ->
+                        target.path("upload/v2")
+                                .queryParam("service", serviceMap.get(ciContext.getService()))
+                                .queryParam("slug", ciContext.getRepoSlug())
+                                .queryParam("job", ciContext.getBuildRunId())
+                                .queryParam("build", ciContext.getBuildId())
+                                .queryParam("build_url", ciContext.getBuildUrl())
+                                .queryParam("branch", ciContext.getBranch())
+                                .queryParam("commit", ciContext.getCommit())
+                                .queryParam("pr", ciContext.getPullRequest())
+                                .request()
+                                .post(
+                                        Entity.entity(report, MediaType.APPLICATION_JSON_TYPE),
+                                        String.class));
+        return withRetry(
+                () ->
+                        target.path("gh/{user}/{repo}/tree/{commit}")
+                                .resolveTemplate("user", ciContext.getUser())
+                                .resolveTemplate("repo", ciContext.getRepository())
+                                .resolveTemplate("commit", ciContext.getCommit())
+                                .getUri()
+                                .toString());
     }
 }

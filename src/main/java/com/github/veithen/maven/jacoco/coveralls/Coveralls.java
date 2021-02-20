@@ -139,9 +139,13 @@ final class Coveralls implements CoverageService {
                                 .build(),
                         jsonFile,
                         MediaType.APPLICATION_JSON_TYPE));
-        return target.path("api/v1/jobs")
-                .request()
-                .post(Entity.entity(multipart, multipart.getMediaType()), JsonObject.class)
-                .getString("url");
+        return withRetry(
+                () ->
+                        target.path("api/v1/jobs")
+                                .request()
+                                .post(
+                                        Entity.entity(multipart, multipart.getMediaType()),
+                                        JsonObject.class)
+                                .getString("url"));
     }
 }
