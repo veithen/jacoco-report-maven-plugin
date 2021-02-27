@@ -27,6 +27,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -44,10 +45,12 @@ import com.github.veithen.maven.jacoco.Source;
 
 final class Codecov implements CoverageService {
     private final WebTarget target;
+    private final Client client;
     private final Map<String, String> serviceMap;
 
-    Codecov(WebTarget target) {
+    Codecov(WebTarget target, Client client) {
         this.target = target;
+        this.client = client;
         serviceMap = ServiceMap.loadServiceMap("META-INF/codecov-services.properties");
     }
 
@@ -116,28 +119,33 @@ final class Codecov implements CoverageService {
         }
         JsonObject report =
                 Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
+        String[] responseParts =
+                withRetry(
+                                () ->
+                                        target.path("upload/v4")
+                                                .queryParam(
+                                                        "service",
+                                                        serviceMap.get(ciContext.getService()))
+                                                .queryParam("slug", ciContext.getRepoSlug())
+                                                .queryParam("job", ciContext.getBuildRunId())
+                                                .queryParam("build", ciContext.getBuildId())
+                                                .queryParam("build_url", ciContext.getBuildUrl())
+                                                .queryParam("branch", ciContext.getBranch())
+                                                .queryParam("commit", ciContext.getCommit())
+                                                .queryParam("pr", ciContext.getPullRequest())
+                                                .request()
+                                                .accept(MediaType.TEXT_PLAIN)
+                                                .post(
+                                                        Entity.entity("", MediaType.TEXT_PLAIN),
+                                                        String.class))
+                        .split("\\r?\\n");
         withRetry(
                 () ->
-                        target.path("upload/v2")
-                                .queryParam("service", serviceMap.get(ciContext.getService()))
-                                .queryParam("slug", ciContext.getRepoSlug())
-                                .queryParam("job", ciContext.getBuildRunId())
-                                .queryParam("build", ciContext.getBuildId())
-                                .queryParam("build_url", ciContext.getBuildUrl())
-                                .queryParam("branch", ciContext.getBranch())
-                                .queryParam("commit", ciContext.getCommit())
-                                .queryParam("pr", ciContext.getPullRequest())
+                        client.target(responseParts[1])
                                 .request()
-                                .post(
+                                .put(
                                         Entity.entity(report, MediaType.APPLICATION_JSON_TYPE),
                                         String.class));
-        return withRetry(
-                () ->
-                        target.path("gh/{user}/{repo}/tree/{commit}")
-                                .resolveTemplate("user", ciContext.getUser())
-                                .resolveTemplate("repo", ciContext.getRepository())
-                                .resolveTemplate("commit", ciContext.getCommit())
-                                .getUri()
-                                .toString());
+        return responseParts[0];
     }
 }

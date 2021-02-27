@@ -32,6 +32,6 @@ import com.github.veithen.maven.jacoco.CoverageServiceFactory;
 public final class CodecovFactory implements CoverageServiceFactory {
     @Override
     public CoverageService newInstance(Client client, Optional<String> apiEndpoint) {
-        return new Codecov(client.target(apiEndpoint.orElse("https://codecov.io")));
+        return new Codecov(client.target(apiEndpoint.orElse("https://codecov.io")), client);
     }
 }

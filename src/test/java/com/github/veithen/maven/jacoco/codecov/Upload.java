@@ -21,12 +21,6 @@ package com.github.veithen.maven.jacoco.codecov;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -35,13 +29,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
-@Path("upload/v2")
+@Path("upload/v4")
 public class Upload {
     @Context ServletContext servletContext;
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public String post(
             @QueryParam("service") String service,
@@ -51,8 +46,8 @@ public class Upload {
             @QueryParam("build_url") String buildUrl,
             @QueryParam("commit") String commit,
             @QueryParam("branch") String branch,
-            JsonObject body)
-            throws Exception {
+            @Context UriInfo uriInfo,
+            String body) {
         assertThat(service).isEqualTo("travis");
         assertThat(slug).isEqualTo("dummy/test");
         assertThat(job).isEqualTo("123456");
@@ -60,13 +55,6 @@ public class Upload {
         assertThat(buildUrl).isEqualTo("https://travis-ci.org/dummy/test/jobs/123456");
         assertThat(commit).isEqualTo("4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33");
         assertThat(branch).isEqualTo("master");
-        try (OutputStream out =
-                new FileOutputStream(
-                        new File(
-                                servletContext.getInitParameter("outputDirectory"),
-                                "codecov.json"))) {
-            Json.createWriter(out).write(body);
-        }
-        return "";
+        return "http://foobar\n" + uriInfo.getBaseUriBuilder().path("storage").toString();
     }
 }
