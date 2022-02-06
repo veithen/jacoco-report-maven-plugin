@@ -29,6 +29,7 @@ final class Lazy<T> implements Supplier<T> {
         this.supplier = supplier;
     }
 
+    @Override
     public synchronized T get() {
         if (supplier != null) {
             value = supplier.get();
