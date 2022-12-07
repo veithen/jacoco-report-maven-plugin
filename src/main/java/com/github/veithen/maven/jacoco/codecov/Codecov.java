@@ -40,6 +40,7 @@ import org.jacoco.core.analysis.ISourceFileCoverage;
 import com.github.veithen.maven.jacoco.ContinuousIntegrationContext;
 import com.github.veithen.maven.jacoco.CoverageContext;
 import com.github.veithen.maven.jacoco.CoverageService;
+import com.github.veithen.maven.jacoco.Retry;
 import com.github.veithen.maven.jacoco.ServiceMap;
 import com.github.veithen.maven.jacoco.Source;
 
@@ -137,7 +138,11 @@ final class Codecov implements CoverageService {
                                                 .accept(MediaType.TEXT_PLAIN)
                                                 .post(
                                                         Entity.entity("", MediaType.TEXT_PLAIN),
-                                                        String.class))
+                                                        String.class),
+                                // /upload sometimes incorrectly returns 404
+                                // (https://github.com/codecov/codecov-action/issues/598); retry
+                                // those errors too.
+                                (ex) -> Retry.isServerError(ex) || ex instanceof NotFoundException)
                         .split("\\r?\\n");
         withRetry(
                 () ->

@@ -20,6 +20,7 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.IOException;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.ws.rs.ProcessingException;
@@ -28,15 +29,15 @@ import javax.ws.rs.ServerErrorException;
 public final class Retry {
     private Retry() {}
 
-    public static <T> T withRetry(Supplier<T> retryable) {
+    public static <T> T withRetry(Supplier<T> action, Predicate<RuntimeException> retriable) {
         int numAttempts = 0;
         long delay = 500;
         while (true) {
             numAttempts++;
             try {
-                return retryable.get();
+                return action.get();
             } catch (RuntimeException ex) {
-                if (isRetriable(ex) && numAttempts < 4) {
+                if (retriable.test(ex) && numAttempts < 4) {
                     try {
                         Thread.sleep(delay);
                     } catch (InterruptedException ex2) {
@@ -50,7 +51,11 @@ public final class Retry {
         }
     }
 
-    private static boolean isRetriable(RuntimeException ex) {
+    public static <T> T withRetry(Supplier<T> action) {
+        return withRetry(action, Retry::isServerError);
+    }
+
+    public static boolean isServerError(RuntimeException ex) {
         return (ex instanceof ProcessingException && ex.getCause() instanceof IOException)
                 || ex instanceof ServerErrorException;
     }
