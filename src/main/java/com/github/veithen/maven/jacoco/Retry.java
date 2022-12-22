@@ -26,7 +26,12 @@ import java.util.function.Supplier;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServerErrorException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class Retry {
+    private static final Logger log = LoggerFactory.getLogger(Retry.class);
+
     private Retry() {}
 
     public static <T> T withRetry(Supplier<T> action, Predicate<RuntimeException> retriable) {
@@ -38,6 +43,10 @@ public final class Retry {
                 return action.get();
             } catch (RuntimeException ex) {
                 if (retriable.test(ex) && numAttempts < 4) {
+                    log.info(
+                            "Request failed with {}; retrying in {} ms",
+                            ex.getClass().getName(),
+                            delay);
                     try {
                         Thread.sleep(delay);
                     } catch (InterruptedException ex2) {
