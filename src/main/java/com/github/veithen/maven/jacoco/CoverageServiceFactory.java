@@ -21,7 +21,7 @@ package com.github.veithen.maven.jacoco;
 
 import java.util.Optional;
 
-import javax.ws.rs.client.Client;
+import jakarta.ws.rs.client.Client;
 
 public interface CoverageServiceFactory {
     CoverageService newInstance(Client client, Optional<String> apiEndpoint);

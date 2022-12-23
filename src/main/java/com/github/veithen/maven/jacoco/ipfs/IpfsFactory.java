@@ -21,7 +21,7 @@ package com.github.veithen.maven.jacoco.ipfs;
 
 import java.util.Optional;
 
-import javax.ws.rs.client.Client;
+import jakarta.ws.rs.client.Client;
 
 import org.codehaus.plexus.component.annotations.Component;
 

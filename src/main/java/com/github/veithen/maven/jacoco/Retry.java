@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ServerErrorException;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.ServerErrorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

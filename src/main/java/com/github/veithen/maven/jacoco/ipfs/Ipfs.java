@@ -25,13 +25,13 @@ import java.io.StringReader;
 import java.net.ConnectException;
 import java.util.Locale;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
 
 import org.apache.maven.plugin.MojoFailureException;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;

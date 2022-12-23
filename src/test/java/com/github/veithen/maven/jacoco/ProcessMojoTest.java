@@ -25,10 +25,10 @@ import static org.mockito.Mockito.when;
 
 import java.io.StringReader;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import org.apache.maven.plugin.MojoFailureException;
 import org.junit.jupiter.api.Test;
