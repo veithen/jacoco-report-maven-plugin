@@ -119,11 +119,6 @@
             <artifactId>jersey-media-multipart</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.activation</groupId>
-            <artifactId>jakarta.activation-api</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
             <scope>runtime</scope>
