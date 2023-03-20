@@ -27,7 +27,7 @@
 
     <groupId>com.github.veithen.maven</groupId>
     <artifactId>jacoco-report-maven-plugin</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.4.0</version>
     <packaging>maven-plugin</packaging>
 
     <url>https://github.com/veithen/jacoco-report-maven-plugin</url>
@@ -44,13 +44,13 @@
         <url>https://github.com/veithen/jacoco-report-maven-plugin/tree/master</url>
         <connection>scm:git:http://github.com/veithen/jacoco-report-maven-plugin.git</connection>
         <developerConnection>scm:git:https://github.com/veithen/jacoco-report-maven-plugin.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.4.0</tag>
     </scm>
 
     <properties>
         <github.repository>jacoco-report-maven-plugin</github.repository>
         <javaVersion>11</javaVersion>
-        <project.build.outputTimestamp>2022-01-23T12:43:00Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2023-03-20T23:08:43Z</project.build.outputTimestamp>
         <maven.version>3.9.0</maven.version>
     </properties>
 
@@ -238,7 +238,7 @@
                             <target>
                                 <replaceregexp match="\brecord\b" replace="logRecord" flags="g" encoding="${project.build.sourceEncoding}">
                                     <fileset dir="${project.build.directory}/src">
-                                        <include name="**/*.java"/>
+                                        <include name="**/*.java" />
                                     </fileset>
                                 </replaceregexp>
                             </target>
