@@ -30,7 +30,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.github.veithen.maven.jacoco.TestHelper;
 
-@Path("api/gh/{user}/{repository}")
+@Path("api/v2/github/{user}/repos/{repository}")
 public class Repository {
     @GET
     @Produces(MediaType.APPLICATION_JSON)

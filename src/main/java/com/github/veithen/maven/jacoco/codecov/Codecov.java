@@ -68,7 +68,7 @@ final class Codecov implements CoverageService {
         try {
             withRetry(
                     () ->
-                            target.path("api/gh/{user}/{repo}")
+                            target.path("api/v2/github/{user}/repos/{repo}")
                                     .resolveTemplate("user", ciContext.getUser())
                                     .resolveTemplate("repo", ciContext.getRepository())
                                     .request()
