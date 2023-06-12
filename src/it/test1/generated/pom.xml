@@ -26,9 +26,9 @@
     <artifactId>generated</artifactId>
     <dependencies>
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -36,7 +36,7 @@
             <plugin>
                 <groupId>com.github.veithen.maven</groupId>
                 <artifactId>xjc-maven-plugin</artifactId>
-                <version>0.1.1</version>
+                <version>0.2.0</version>
                 <executions>
                     <execution>
                         <goals>
