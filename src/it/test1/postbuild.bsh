@@ -18,7 +18,5 @@
  * #L%
  */
 import java.io.*;
-import com.google.common.truth.*;
 
-Truth.assertThat(new File(basedir, "../../../target/codecov.json").exists()).isTrue();
-Truth.assertThat(new File(basedir, "../../../target/coveralls.json").exists()).isTrue();
+return new File(basedir, "../../../target/codecov.json").exists() && new File(basedir, "../../../target/coveralls.json").exists();

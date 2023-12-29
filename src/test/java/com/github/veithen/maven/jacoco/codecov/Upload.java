@@ -19,7 +19,7 @@
  */
 package com.github.veithen.maven.jacoco.codecov;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.servlet.ServletContext;
 import jakarta.ws.rs.Consumes;

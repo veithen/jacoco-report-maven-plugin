@@ -19,7 +19,7 @@
  */
 package com.github.veithen.maven.jacoco.coveralls;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.FileOutputStream;

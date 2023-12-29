@@ -19,7 +19,7 @@
  */
 package com.github.veithen.maven.jacoco;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.jacoco.core.data.SessionInfo;
 import org.jacoco.core.runtime.AbstractRuntime;
@@ -30,7 +30,7 @@ public class CoverageContextTest {
     public void testAnonymize() {
         SessionInfo sessionInfo = new SessionInfo("host-" + AbstractRuntime.createRandomId(), 0, 0);
         SessionInfo anonymizedSessionInfo = CoverageContext.anonymize(sessionInfo);
-        assertThat(anonymizedSessionInfo).isNotSameInstanceAs(sessionInfo);
+        assertThat(anonymizedSessionInfo).isNotSameAs(sessionInfo);
         assertThat(anonymizedSessionInfo.getId()).doesNotContain("host");
     }
 }
