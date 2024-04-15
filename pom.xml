@@ -27,7 +27,7 @@
 
     <groupId>com.github.veithen.maven</groupId>
     <artifactId>jacoco-report-maven-plugin</artifactId>
-    <version>0.4.1-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <url>https://github.com/veithen/jacoco-report-maven-plugin</url>
@@ -54,22 +54,6 @@
         <maven.version>3.9.6</maven.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.glassfish.jersey</groupId>
-                <artifactId>jersey-bom</artifactId>
-                <version>3.1.6</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-core</artifactId>
-                <version>4.0.4</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -109,24 +93,6 @@
             <version>1.16.1</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-processing</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
@@ -137,41 +103,6 @@
             <artifactId>assertj-core</artifactId>
             <version>3.25.3</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.11.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-bean-validation</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- This is here to make Javadoc happy. -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>2.0.13</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -186,78 +117,7 @@
     </repositories>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
         <plugins>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.cxf</groupId>
-                                    <artifactId>cxf-core</artifactId>
-                                    <classifier>sources</classifier>
-                                </artifactItem>
-                            </artifactItems>
-                            <includes>
-                                org/apache/cxf/common/logging/AbstractDelegatingLogger.java,
-                                org/apache/cxf/common/logging/Slf4jLogger.java
-                            </includes>
-                            <outputDirectory>${project.build.directory}/src</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <replaceregexp match="\brecord\b" replace="logRecord" flags="g" encoding="${project.build.sourceEncoding}">
-                                    <fileset dir="${project.build.directory}/src">
-                                        <include name="**/*.java" />
-                                    </fileset>
-                                </replaceregexp>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/src</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-component-metadata</artifactId>
@@ -286,39 +146,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.github.veithen.daemon</groupId>
-                <artifactId>daemon-maven-plugin</artifactId>
-                <version>0.6.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>start</goal>
-                            <goal>stop-all</goal>
-                        </goals>
-                        <configuration>
-                            <daemonArtifact>
-                                <artifactId>jetty-daemon</artifactId>
-                            </daemonArtifact>
-                            <ports>
-                                <port>
-                                    <name>http</name>
-                                    <propertyName>httpPort</propertyName>
-                                </port>
-                            </ports>
-                            <daemonConfiguration>
-                                <resourceBases>
-                                    <resourceBase>src/test/webapp</resourceBase>
-                                </resourceBases>
-                                <initParameters>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </initParameters>
-                            </daemonConfiguration>
-                            <argLine>${argLine} ${securityArgLine}</argLine>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.github.veithen.maven</groupId>
                 <artifactId>resolver-proxy-maven-plugin</artifactId>
                 <version>0.5.0</version>
@@ -343,51 +170,10 @@
                             <goals>
                                 <goal>verify</goal>
                             </goals>
-                            <invokerTest>test1</invokerTest>
-                            <environmentVariables>
-                                <TRAVIS_JOB_ID>123456</TRAVIS_JOB_ID>
-                                <TRAVIS_JOB_NUMBER>45.1</TRAVIS_JOB_NUMBER>
-                                <TRAVIS_JOB_WEB_URL>https://travis-ci.org/dummy/test/jobs/123456</TRAVIS_JOB_WEB_URL>
-                                <TRAVIS_REPO_SLUG>dummy/test</TRAVIS_REPO_SLUG>
-                                <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
-                                <TRAVIS_COMMIT>4d4f3aba8752b5147fc56d6502b9eb6dcde8aa33</TRAVIS_COMMIT>
-                                <GITHUB_ACTION />
-                                <GITHUB_REPOSITORY />
-                                <GITHUB_RUN_ID />
-                                <GITHUB_REF />
-                                <GITHUB_SHA />
-                            </environmentVariables>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>invoker-unconfigured</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <goals>
-                                <goal>verify</goal>
-                            </goals>
-                            <invokerTest>unconfigured</invokerTest>
-                            <environmentVariables>
-                                <TRAVIS_JOB_ID>654321</TRAVIS_JOB_ID>
-                                <TRAVIS_JOB_NUMBER>54.1</TRAVIS_JOB_NUMBER>
-                                <TRAVIS_JOB_WEB_URL>https://travis-ci.org/dummy/foobar/jobs/654321</TRAVIS_JOB_WEB_URL>
-                                <TRAVIS_REPO_SLUG>dummy/foobar</TRAVIS_REPO_SLUG>
-                                <TRAVIS_BRANCH>master</TRAVIS_BRANCH>
-                                <TRAVIS_COMMIT>c56d6502b9eb6dcde8aa334d4f3aba8752b5147f</TRAVIS_COMMIT>
-                                <GITHUB_ACTION />
-                                <GITHUB_REPOSITORY />
-                                <GITHUB_RUN_ID />
-                                <GITHUB_REF />
-                                <GITHUB_SHA />
-                            </environmentVariables>
+                            <mavenOpts>${argLine} ${securityArgLine}</mavenOpts>
                         </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <mavenOpts>${argLine} ${securityArgLine}</mavenOpts>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

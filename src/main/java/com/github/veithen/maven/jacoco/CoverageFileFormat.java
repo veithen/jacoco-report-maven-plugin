@@ -2,7 +2,7 @@
  * #%L
  * jacoco-report-maven-plugin
  * %%
- * Copyright (C) 2018 - 2023 Andreas Veithen
+ * Copyright (C) 2018 - 2024 Andreas Veithen
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package test;
+package com.github.veithen.maven.jacoco;
 
-public class HelloService {
-    public static void sayHello() {
-        System.out.println("Hello!");
-    }
+import java.io.OutputStream;
+
+public interface CoverageFileFormat {
+    String getDefaultFileName();
+
+    void write(CoverageContext coverageContext, OutputStream out);
 }

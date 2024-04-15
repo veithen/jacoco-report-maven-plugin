@@ -1,6 +1,6 @@
 # jacoco-report-maven-plugin
 
-This Maven plugin processes JaCoCo execution data and uploads coverage reports to [coveralls.io](https://coveralls.io) and/or [codecov.io](https://codecov.io). It can also add standard JaCoCo HTML reports to [IPFS](https://ipfs.io). The main difference with respect to other tools is that it correctly computes cross-module coverage in multi-module Maven builds.
+This Maven plugin processes JaCoCo execution data and produces coverage reports that can then be uploaded to [codecov.io](https://codecov.io). The main difference with respect to other tools is that it correctly computes cross-module coverage in multi-module Maven builds.
 
 To use the plugin, add the following to your project's root POM:
 
@@ -32,7 +32,14 @@ This would be used in conjunction with the standard jacoco-maven-plugin to gener
         </executions>
     </plugin>
 
-When running on [Travis](https://travis-ci.org) or Github Actions this will automatically upload reports to coveralls.io and/or codecov.io if the project is enabled on one of these services. Note that public Github repositories are always enabled on codecov.io by default, so no further action is required for that service.
+With Github Actions you can then upload the coverage report using a configuration like this:
+
+    - name: Upload Coverage Report
+      uses: codecov/codecov-action@v4
+      with:
+        fail_ci_if_error: true
+        files: ./target/coverage.json
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 You might want to exclude the code from some modules from the coverage reports, e.g. modules that contain test utilities. In this case, set the `includeClasses` parameter to false for those modules:
 

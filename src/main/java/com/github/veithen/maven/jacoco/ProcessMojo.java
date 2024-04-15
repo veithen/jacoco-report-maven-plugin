@@ -20,24 +20,15 @@
 package com.github.veithen.maven.jacoco;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import jakarta.json.JsonObject;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-
-import org.apache.cxf.common.logging.Slf4jLogger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -46,8 +37,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -63,13 +52,11 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
     @Parameter(defaultValue = "true")
     private boolean includeClasses;
 
-    @Component(role = ContinuousIntegrationContextFactory.class)
-    private Map<String, ContinuousIntegrationContextFactory> continuousIntegrationContextFactories;
+    @Component(role = CoverageFileFormat.class)
+    private Map<String, CoverageFileFormat> coverageFileFormats;
 
-    @Component(role = CoverageServiceFactory.class)
-    private Map<String, CoverageServiceFactory> coverageServiceFactories;
-
-    @Parameter private Map<String, String> apiEndpoints;
+    @Parameter(defaultValue = "codecov", required = true)
+    private String format;
 
     public ProcessMojo() {
         super(CoverageData.class);
@@ -137,24 +124,6 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
         return stream::iterator;
     }
 
-    static MojoFailureException processException(
-            String serviceName, WebApplicationException exception) {
-        String message = null;
-        try {
-            JsonObject entity = exception.getResponse().readEntity(JsonObject.class);
-            if (entity.getBoolean("error", true)) {
-                message = entity.getString("message", null);
-            }
-        } catch (ProcessingException ex) {
-            // Ignore
-        }
-        if (message == null) {
-            message = exception.getMessage();
-        }
-        return new MojoFailureException(
-                String.format("Failed to send request to %s: %s", serviceName, message), exception);
-    }
-
     @Override
     protected void doAggregate(List<CoverageData> results)
             throws MojoExecutionException, MojoFailureException {
@@ -167,54 +136,9 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
             log.info("No classes included; skipping execution.");
             return;
         }
-        ContinuousIntegrationContext ciContext = null;
-        for (ContinuousIntegrationContextFactory factory :
-                continuousIntegrationContextFactories.values()) {
-            ciContext = factory.createContext(System.getenv());
-            if (ciContext != null) {
-                break;
-            }
-        }
-        if (ciContext != null) {
-            log.info("Continuous integration context:");
-            log.info("  Repo slug: " + ciContext.getRepoSlug());
-            log.info("  Branch: " + ciContext.getBranch());
-            log.info("  Commit: " + ciContext.getCommit());
-            log.info("  Service: " + ciContext.getService());
-            log.info("  Build ID: " + ciContext.getBuildId());
-            log.info("  Build run ID: " + ciContext.getBuildRunId());
-            log.info("  Build URL: " + ciContext.getBuildUrl());
-        }
-        Client client =
-                ClientBuilder.newBuilder()
-                        .register(MultiPartFeature.class)
-                        .register(UserAgentFeature.class)
-                        .register(new LoggingFeature(new Slf4jLogger("jersey", null)))
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(1, TimeUnit.MINUTES)
-                        .build();
-        List<CoverageService> coverageServices = new ArrayList<>();
-        for (Map.Entry<String, CoverageServiceFactory> entry :
-                coverageServiceFactories.entrySet()) {
-            coverageServices.add(
-                    entry.getValue()
-                            .newInstance(
-                                    client,
-                                    apiEndpoints == null
-                                            ? Optional.empty()
-                                            : Optional.ofNullable(
-                                                    apiEndpoints.get(entry.getKey()))));
-        }
-        for (Iterator<CoverageService> it = coverageServices.iterator(); it.hasNext(); ) {
-            CoverageService service = it.next();
-            if (!service.isEnabled(ciContext)) {
-                log.info(String.format("%s not configured/enabled", service.getName()));
-                it.remove();
-            }
-        }
-        if (coverageServices.isEmpty()) {
-            log.info("No usable coverage services found; skipping execution.");
-            return;
+        CoverageFileFormat coverageFileFormat = coverageFileFormats.get(format);
+        if (coverageFileFormat == null) {
+            throw new MojoExecutionException(String.format("Unknown format \"%s\"", format));
         }
         ExecFileLoader loader = new ExecFileLoader();
         for (File dataFile :
@@ -251,17 +175,14 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
                         // Only try to find the root directory if we need to, so that the plugin
                         // works with Subversion and IPFS.
                         new Lazy<File>(this::findRootDir));
-        for (CoverageService service : coverageServices) {
-            String link;
-            try {
-                link = service.upload(ciContext, coverageContext);
-            } catch (WebApplicationException ex) {
-                throw processException(service.getName(), ex);
-            }
-            log.info(
-                    String.format(
-                            "Successfully uploaded coverage data to %s: %s",
-                            service.getName(), link));
+        File outputDir = new File(mavenSession.getTopLevelProject().getBuild().getDirectory());
+        outputDir.mkdirs();
+        File outputFile = new File(outputDir, coverageFileFormat.getDefaultFileName());
+        try (OutputStream out = new FileOutputStream(outputFile)) {
+            coverageFileFormat.write(coverageContext, out);
+        } catch (IOException ex) {
+            throw new MojoExecutionException(
+                    String.format("Failed to write %s: %s", outputFile, ex.getMessage()), ex);
         }
     }
 }

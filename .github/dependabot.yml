@@ -8,10 +8,6 @@ updates:
     directory: "/src/it/test1"
     schedule:
       interval: "daily"
-  - package-ecosystem: "maven"
-    directory: "/src/it/unconfigured"
-    schedule:
-      interval: "daily"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

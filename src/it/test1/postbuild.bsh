@@ -19,4 +19,4 @@
  */
 import java.io.*;
 
-return new File(basedir, "../../../target/codecov.json").exists() && new File(basedir, "../../../target/coveralls.json").exists();
+return new File(basedir, "target/coverage.json").exists();

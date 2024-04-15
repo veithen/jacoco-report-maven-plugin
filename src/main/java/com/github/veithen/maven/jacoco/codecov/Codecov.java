@@ -19,71 +19,35 @@
  */
 package com.github.veithen.maven.jacoco.codecov;
 
-import static com.github.veithen.maven.jacoco.Retry.withRetry;
-
-import java.util.Map;
+import java.io.OutputStream;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
 
+import org.codehaus.plexus.component.annotations.Component;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.ILine;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.analysis.ISourceFileCoverage;
 
-import com.github.veithen.maven.jacoco.ContinuousIntegrationContext;
 import com.github.veithen.maven.jacoco.CoverageContext;
-import com.github.veithen.maven.jacoco.CoverageService;
-import com.github.veithen.maven.jacoco.Retry;
-import com.github.veithen.maven.jacoco.ServiceMap;
+import com.github.veithen.maven.jacoco.CoverageFileFormat;
 import com.github.veithen.maven.jacoco.Source;
 
-final class Codecov implements CoverageService {
-    private final WebTarget target;
-    private final Client client;
-    private final Map<String, String> serviceMap;
-
-    Codecov(WebTarget target, Client client) {
-        this.target = target;
-        this.client = client;
-        serviceMap = ServiceMap.loadServiceMap("META-INF/codecov-services.properties");
+/**
+ * Implements the <a href="https://docs.codecov.com/docs/codecov-custom-coverage-format">Codecov
+ * custom coverage format</a>.
+ */
+@Component(role = CoverageFileFormat.class, hint = "codecov")
+public final class Codecov implements CoverageFileFormat {
+    @Override
+    public String getDefaultFileName() {
+        return "coverage.json";
     }
 
     @Override
-    public String getName() {
-        return "Codecov";
-    }
-
-    @Override
-    public boolean isEnabled(ContinuousIntegrationContext ciContext) {
-        if (ciContext == null || !serviceMap.containsKey(ciContext.getService())) {
-            return false;
-        }
-        try {
-            withRetry(
-                    () ->
-                            target.path("api/v2/github/{user}/repos/{repo}")
-                                    .resolveTemplate("user", ciContext.getUser())
-                                    .resolveTemplate("repo", ciContext.getRepository())
-                                    .request()
-                                    .accept(MediaType.APPLICATION_JSON_TYPE)
-                                    .get(JsonObject.class));
-            return true;
-        } catch (NotFoundException ex) {
-            return false;
-        }
-    }
-
-    @Override
-    public String upload(ContinuousIntegrationContext ciContext, CoverageContext coverageContext) {
-        // Use JSON reporting because source file locations can't be properly resolved
-        // from a JaCoCo XML report.
+    public void write(CoverageContext coverageContext, OutputStream out) {
         JsonObjectBuilder sourceFilesBuilder = Json.createObjectBuilder();
         for (IPackageCoverage packageCoverage : coverageContext.getBundle().getPackages()) {
             for (ISourceFileCoverage sourceFileCoverage : packageCoverage.getSourceFiles()) {
@@ -120,37 +84,6 @@ final class Codecov implements CoverageService {
         }
         JsonObject report =
                 Json.createObjectBuilder().add("coverage", sourceFilesBuilder.build()).build();
-        String[] responseParts =
-                withRetry(
-                                () ->
-                                        target.path("upload/v4")
-                                                .queryParam(
-                                                        "service",
-                                                        serviceMap.get(ciContext.getService()))
-                                                .queryParam("slug", ciContext.getRepoSlug())
-                                                .queryParam("job", ciContext.getBuildRunId())
-                                                .queryParam("build", ciContext.getBuildId())
-                                                .queryParam("build_url", ciContext.getBuildUrl())
-                                                .queryParam("branch", ciContext.getBranch())
-                                                .queryParam("commit", ciContext.getCommit())
-                                                .queryParam("pr", ciContext.getPullRequest())
-                                                .request()
-                                                .accept(MediaType.TEXT_PLAIN)
-                                                .post(
-                                                        Entity.entity("", MediaType.TEXT_PLAIN),
-                                                        String.class),
-                                // /upload sometimes incorrectly returns 404
-                                // (https://github.com/codecov/codecov-action/issues/598); retry
-                                // those errors too.
-                                (ex) -> Retry.isServerError(ex) || ex instanceof NotFoundException)
-                        .split("\\r?\\n");
-        withRetry(
-                () ->
-                        client.target(responseParts[1])
-                                .request()
-                                .put(
-                                        Entity.entity(report, MediaType.APPLICATION_JSON_TYPE),
-                                        String.class));
-        return responseParts[0];
+        Json.createWriter(out).writeObject(report);
     }
 }
