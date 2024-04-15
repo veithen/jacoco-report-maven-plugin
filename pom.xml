@@ -27,7 +27,7 @@
 
     <groupId>com.github.veithen.maven</groupId>
     <artifactId>jacoco-report-maven-plugin</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <url>https://github.com/veithen/jacoco-report-maven-plugin</url>
@@ -44,13 +44,13 @@
         <url>https://github.com/veithen/jacoco-report-maven-plugin/tree/master</url>
         <connection>scm:git:http://github.com/veithen/jacoco-report-maven-plugin.git</connection>
         <developerConnection>scm:git:https://github.com/veithen/jacoco-report-maven-plugin.git</developerConnection>
-        <tag>0.5.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
         <github.repository>jacoco-report-maven-plugin</github.repository>
         <javaVersion>11</javaVersion>
-        <project.build.outputTimestamp>2024-04-15T22:43:38Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2024-04-15T22:44:00Z</project.build.outputTimestamp>
         <maven.version>3.9.6</maven.version>
     </properties>
 
