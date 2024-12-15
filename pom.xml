@@ -180,7 +180,6 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
                     <projectName>jacoco-report-maven-plugin</projectName>
-                    <licenseName>apache_v2</licenseName>
                     <excludes>
                         <exclude>src/test/resources/com/github/veithen/maven/jacoco/ipfs/*_response.json</exclude>
                     </excludes>
