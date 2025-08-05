@@ -43,6 +43,7 @@ import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
 
 import com.github.veithen.maven.shared.mojo.aggregating.AggregatingMojo;
+import com.google.common.base.Suppliers;
 
 @Mojo(name = "process", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public final class ProcessMojo extends AggregatingMojo<CoverageData> {
@@ -174,7 +175,7 @@ public final class ProcessMojo extends AggregatingMojo<CoverageData> {
                         sourceFiles,
                         // Only try to find the root directory if we need to, so that the plugin
                         // works with Subversion and IPFS.
-                        new Lazy<File>(this::findRootDir));
+                        Suppliers.memoize(this::findRootDir));
         File outputDir = new File(mavenSession.getTopLevelProject().getBuild().getDirectory());
         outputDir.mkdirs();
         File outputFile = new File(outputDir, coverageFileFormat.getDefaultFileName());
