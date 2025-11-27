@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.github.veithen</groupId>
         <artifactId>parent</artifactId>
-        <version>55</version>
+        <version>56</version>
     </parent>
 
     <groupId>com.github.veithen.maven</groupId>
@@ -138,21 +138,6 @@
             </plugin>
             <plugin>
                 <groupId>com.github.veithen.maven</groupId>
-                <artifactId>hermetic-maven-plugin</artifactId>
-                <configuration>
-                    <allowExec>true</allowExec>
-                    <property>securityArgLine</property>
-                    <append>false</append>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>${argLine} ${securityArgLine}</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.github.veithen.maven</groupId>
                 <artifactId>resolver-proxy-maven-plugin</artifactId>
                 <version>0.5.1</version>
                 <executions>
@@ -176,7 +161,6 @@
                             <goals>
                                 <goal>verify</goal>
                             </goals>
-                            <mavenOpts>${argLine} ${securityArgLine}</mavenOpts>
                         </configuration>
                     </execution>
                 </executions>
